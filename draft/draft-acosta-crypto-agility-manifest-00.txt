@@ -3,7 +3,7 @@
 
 
 Network Working Group                                          L. Acosta
-Internet-Draft                                            Dandelion Labs
+Internet-Draft                                              QuantaKrypto
 Intended status: Informational                              27 July 2026
 Expires: 28 January 2027
 
@@ -750,7 +750,7 @@ Appendix A.  Status of This Proposal
 Author's Address
 
    Leon Acosta
-   Dandelion Labs
+   QuantaKrypto
    Email: leon@quantakrypto.com
 
 
