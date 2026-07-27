@@ -4,7 +4,7 @@
 - **Category:** Informational
 - **IPR:** trust200902
 - **Submission type:** IETF (individual submission)
-- **Author:** Leon Acosta, QuantaKrypto (contact: `leon@quantakrypto.com`)
+- **Author:** Leon Acosta, QuantaKrypto, Argentina (contact: `leon@quantakrypto.com`)
 - **Date:** 2026
 
 > This Markdown file is a readable rendering of the Internet-Draft so it can be
