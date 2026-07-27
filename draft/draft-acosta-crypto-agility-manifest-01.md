@@ -1,6 +1,6 @@
 # A Well-Known URI and JSON Format for Publishing Cryptographic Posture (the Crypto-Agility Manifest)
 
-- **Internet-Draft:** draft-acosta-crypto-agility-manifest-00
+- **Internet-Draft:** draft-acosta-crypto-agility-manifest-01
 - **Category:** Informational
 - **IPR:** trust200902
 - **Submission type:** IETF (individual submission)
@@ -9,7 +9,7 @@
 
 > This Markdown file is a readable rendering of the Internet-Draft so it can be
 > read on GitHub without running xml2rfc. The authoritative source is
-> `draft-acosta-crypto-agility-manifest-00.xml`. If the two ever disagree, the XML
+> `draft-acosta-crypto-agility-manifest-01.xml`. If the two ever disagree, the XML
 > is normative.
 
 > **This document is a proposal.** It is not an IETF product and is not a standard
@@ -441,7 +441,5 @@ This document registers no new media type; the manifest uses the existing
 
 ## Appendix A. Status of This Proposal
 
-This document is an individual proposal published to solicit review. It is not the
-product of any IETF working group, it does not represent IETF consensus, and it is not
-a standard. The reference implementation, a schema, and examples are maintained in the
+This document is an individual Internet-Draft, the first step of the IETF process, published to solicit review. It is not the product of an IETF working group and does not represent IETF consensus, and it is not yet a standard: it is a proposal put forward to be reviewed and, if it has merit, advanced. The reference implementation, a schema, and examples are maintained in the
 open at the repository from which this draft originates.

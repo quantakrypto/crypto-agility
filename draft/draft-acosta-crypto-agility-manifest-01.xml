@@ -3,13 +3,13 @@
      ipr="trust200902"
      category="info"
      submissionType="IETF"
-     docName="draft-acosta-crypto-agility-manifest-00"
+     docName="draft-acosta-crypto-agility-manifest-01"
      version="3"
      consensus="false">
 
   <front>
     <title abbrev="Crypto-Agility Manifest">A Well-Known URI and JSON Format for Publishing Cryptographic Posture (the Crypto-Agility Manifest)</title>
-    <seriesInfo name="Internet-Draft" value="draft-acosta-crypto-agility-manifest-00"/>
+    <seriesInfo name="Internet-Draft" value="draft-acosta-crypto-agility-manifest-01"/>
 
     <author fullname="Leon Acosta" initials="L." surname="Acosta">
       <organization>QuantaKrypto</organization>
@@ -755,9 +755,7 @@ https://example.com/.well-known/crypto-agility.json
     <section anchor="status-of-this-proposal">
       <name>Status of This Proposal</name>
       <t>
-        This document is an individual proposal published to solicit review. It is not
-        the product of any IETF working group, it does not represent IETF consensus, and
-        it is not a standard. The reference implementation, a schema, and examples are
+        This document is an individual Internet-Draft, the first step of the IETF process, published to solicit review. It is not the product of an IETF working group and does not represent IETF consensus, and it is not yet a standard: it is a proposal put forward to be reviewed and, if it has merit, advanced. The reference implementation, a schema, and examples are
         maintained in the open at the repository from which this draft originates.
       </t>
     </section>

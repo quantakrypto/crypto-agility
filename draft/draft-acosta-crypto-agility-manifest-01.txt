@@ -10,7 +10,7 @@ Expires: 28 January 2027
 
  A Well-Known URI and JSON Format for Publishing Cryptographic Posture
                      (the Crypto-Agility Manifest)
-                draft-acosta-crypto-agility-manifest-00
+                draft-acosta-crypto-agility-manifest-01
 
 Abstract
 
@@ -741,19 +741,19 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
 
 Appendix A.  Status of This Proposal
 
-   This document is an individual proposal published to solicit review.
-   It is not the product of any IETF working group, it does not
-   represent IETF consensus, and it is not a standard.  The reference
-   implementation, a schema, and examples are maintained in the open at
-   the repository from which this draft originates.
+   This document is an individual Internet-Draft, the first step of the
+   IETF process, published to solicit review.  It is not the product of
+   an IETF working group and does not represent IETF consensus, and it
+   is not yet a standard: it is a proposal put forward to be reviewed
+   and, if it has merit, advanced.  The reference implementation, a
+   schema, and examples are maintained in the open at the repository
+   from which this draft originates.
 
 Author's Address
 
    Leon Acosta
    QuantaKrypto
    Email: leon@quantakrypto.com
-
-
 
 
 
