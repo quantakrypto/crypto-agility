@@ -34,7 +34,10 @@ CBOM's public-facing discovery counterpart.
 Crypto-agility, the capability to replace and adapt cryptographic algorithms while
 preserving security and operations, is a mature and well-documented objective. It is
 treated at the algorithm-agility level by [RFC7696], and at the organizational and
-lifecycle level by [NIST-CSWP-39]. The migration timelines that give crypto-agility
+lifecycle level by [NIST-CSWP-39]. Mechanism-level guidance for deriving keys when a
+classical and a post-quantum exchange are combined appears in [NIST-SP-800-56C], and
+security-evaluation criteria for quantum key distribution in [ISO-IEC-23837]. The
+migration timelines that give crypto-agility
 its present urgency are set out in [NSM-10] and [NIST-IR-8547], and general
 engineering guidance for the post-quantum transition itself is collected in
 [RFC9958]. The inventory of what

@@ -59,7 +59,10 @@
         while preserving security and operations, is a mature and well-documented
         objective. It is treated at the algorithm-agility level by
         <xref target="RFC7696"/>, and at the organizational and lifecycle level by
-        <xref target="NIST-CSWP-39"/>. The migration timelines that give crypto-agility
+        <xref target="NIST-CSWP-39"/>. Mechanism-level guidance for deriving keys when a
+        classical and a post-quantum exchange are combined appears in
+        <xref target="NIST-SP-800-56C"/>, and security-evaluation criteria for quantum
+        key distribution in <xref target="ISO-IEC-23837"/>. The migration timelines that give crypto-agility
         its present urgency are set out in <xref target="NSM-10"/> and
         <xref target="NIST-IR-8547"/>, and general engineering guidance for the
         post-quantum transition itself is collected in <xref target="RFC9958"/>. The
@@ -432,11 +435,11 @@ https://example.com/.well-known/crypto-agility.json
   },
   "attestation": { "url": "https://quantakrypto.com/attest/acme" },
   "policy": {
-    "source": "NIST IR 8547 (transition to post-quantum cryptography standards)",
+    "source": "NIST IR 8547",
     "deprecateClassicalAfter": 2030,
     "disallowClassicalAfter": 2035,
     "transitionDeadline": null,
-    "citation": "NIST IR 8547 (transition to post-quantum cryptography standards)"
+    "citation": "https://csrc.nist.gov/pubs/ir/8547/ipd"
   }
 }
 ]]></sourcecode>
