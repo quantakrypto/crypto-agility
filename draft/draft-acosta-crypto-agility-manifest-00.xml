@@ -5,7 +5,7 @@
      submissionType="IETF"
      docName="draft-acosta-crypto-agility-manifest-00"
      version="3"
-     consensus="true">
+     consensus="false">
 
   <front>
     <title abbrev="Crypto-Agility Manifest">A Well-Known URI and JSON Format for Publishing Cryptographic Posture (the Crypto-Agility Manifest)</title>
@@ -21,7 +21,6 @@
     <date year="2026"/>
 
     <area>Security</area>
-    <workgroup>Independent Submission</workgroup>
     <keyword>crypto-agility</keyword>
     <keyword>post-quantum</keyword>
     <keyword>well-known URI</keyword>
@@ -168,8 +167,8 @@ https://example.com/.well-known/crypto-agility.json
       <t>
         This location uses the well-known URI mechanism of
         <xref target="RFC8615"/>, the same mechanism that hosts "security.txt"
-        <xref target="RFC9116"/>. The URI suffix "crypto-agility.json" is registered in
-        <xref target="iana"/>. A consumer that knows only an origin
+        <xref target="RFC9116"/>. Registration of the URI suffix "crypto-agility.json"
+        is requested in <xref target="iana"/>. A consumer that knows only an origin
         <bcp14>MUST</bcp14> be able to locate the manifest by resolving this path
         against that origin, with no out-of-band configuration.
       </t>
@@ -760,12 +759,6 @@ https://example.com/.well-known/crypto-agility.json
         the product of any IETF working group, it does not represent IETF consensus, and
         it is not a standard. The reference implementation, a schema, and examples are
         maintained in the open at the repository from which this draft originates.
-      </t>
-      <t>
-        Editorial note: before submission, the author's contact email address, which
-        currently reads "leon@quantakrypto.com" in the front matter, and the IANA
-        change-controller entry in <xref target="iana"/>, must be replaced with final
-        values.
       </t>
     </section>
   </back>

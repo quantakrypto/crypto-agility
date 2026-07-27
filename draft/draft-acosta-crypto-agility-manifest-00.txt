@@ -2,7 +2,7 @@
 
 
 
-Independent Submission                                         L. Acosta
+Network Working Group                                          L. Acosta
 Internet-Draft                                            Dandelion Labs
 Intended status: Informational                              27 July 2026
 Expires: 28 January 2027
@@ -212,11 +212,11 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    https://example.com/.well-known/crypto-agility.json
 
    This location uses the well-known URI mechanism of [RFC8615], the
-   same mechanism that hosts "security.txt" [RFC9116].  The URI suffix
-   "crypto-agility.json" is registered in Section 9.  A consumer that
-   knows only an origin MUST be able to locate the manifest by resolving
-   this path against that origin, with no out-of-band configuration.
-
+   same mechanism that hosts "security.txt" [RFC9116].  Registration of
+   the URI suffix "crypto-agility.json" is requested in Section 9.  A
+   consumer that knows only an origin MUST be able to locate the
+   manifest by resolving this path against that origin, with no out-of-
+   band configuration.
 
 
 
@@ -747,16 +747,16 @@ Appendix A.  Status of This Proposal
    implementation, a schema, and examples are maintained in the open at
    the repository from which this draft originates.
 
-   Editorial note: before submission, the author's contact email
-   address, which currently reads "leon@quantakrypto.com" in the front
-   matter, and the IANA change-controller entry in Section 9, must be
-   replaced with final values.
-
 Author's Address
 
    Leon Acosta
    Dandelion Labs
    Email: leon@quantakrypto.com
+
+
+
+
+
 
 
 

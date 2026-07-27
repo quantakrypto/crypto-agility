@@ -4,7 +4,6 @@
   "title": "Crypto-Agility Manifest",
   "description": "A small, versioned, machine-readable JSON document a project publishes at /.well-known/crypto-agility.json to declare its cryptographic posture, CBOM summary, optional attestation link, and migration policy. See draft-acosta-crypto-agility-manifest-00.",
   "type": "object",
-  "additionalProperties": false,
   "required": [
     "version",
     "manifestType",
@@ -34,7 +33,6 @@
     "generator": {
       "description": "What produced the manifest.",
       "type": "object",
-      "additionalProperties": false,
       "required": ["name", "version"],
       "properties": {
         "name": {
@@ -52,7 +50,6 @@
     "subject": {
       "description": "What the manifest describes.",
       "type": "object",
-      "additionalProperties": false,
       "required": ["root", "repository", "commit"],
       "properties": {
         "root": {
@@ -73,7 +70,6 @@
     "posture": {
       "description": "The distilled cryptographic posture.",
       "type": "object",
-      "additionalProperties": false,
       "required": [
         "readinessScore",
         "hybridKexInUse",
@@ -94,7 +90,6 @@
         "quantumVulnerable": {
           "description": "Counts of quantum-vulnerable findings.",
           "type": "object",
-          "additionalProperties": false,
           "required": ["total", "bySeverity"],
           "properties": {
             "total": {
@@ -105,7 +100,6 @@
             "bySeverity": {
               "description": "Counts keyed by severity. All keys MUST be present.",
               "type": "object",
-              "additionalProperties": false,
               "required": ["critical", "high", "medium", "low", "info"],
               "properties": {
                 "critical": { "type": "integer", "minimum": 0 },
@@ -127,7 +121,6 @@
     "cbomSummary": {
       "description": "A compact summary of, and pointer to, the full CycloneDX CBOM.",
       "type": "object",
-      "additionalProperties": false,
       "required": ["serialNumber", "assetCount", "algorithmFamilies"],
       "properties": {
         "serialNumber": {
@@ -145,7 +138,6 @@
           "type": "array",
           "items": {
             "type": "object",
-            "additionalProperties": false,
             "required": ["family", "count", "quantumVulnerable"],
             "properties": {
               "family": {
@@ -170,7 +162,6 @@
     "attestation": {
       "description": "Optional link to a machine-verifiable posture credential. The URL is recorded verbatim and is not fetched by the generator. Omitted when none is declared.",
       "type": "object",
-      "additionalProperties": false,
       "required": ["url"],
       "properties": {
         "url": {
@@ -183,7 +174,6 @@
     "policy": {
       "description": "The migration policy the project declares it is measured against.",
       "type": "object",
-      "additionalProperties": false,
       "required": [
         "source",
         "deprecateClassicalAfter",

@@ -49,7 +49,7 @@ top of the following work:
 | Reference | What it gives us |
 |---|---|
 | [RFC 9116](https://www.rfc-editor.org/info/rfc9116) - A File Format to Aid in Security Vulnerability Disclosure (`security.txt`) | The **structural model** this manifest follows: a small file at a well-known location, discoverable from an origin alone. |
-| [RFC 8615](https://www.rfc-editor.org/info/rfc8615) - Well-Known URIs | The `/.well-known/` mechanism and the IANA registry the `crypto-agility` suffix is proposed for. |
+| [RFC 8615](https://www.rfc-editor.org/info/rfc8615) - Well-Known URIs | The `/.well-known/` mechanism and the IANA registry the `crypto-agility.json` suffix is proposed for. |
 | [RFC 9110](https://www.rfc-editor.org/info/rfc9110) - HTTP Semantics (STD 97) | The `Content-Type` / media-type framework (`application/json`) used to serve the manifest. |
 | [RFC 7696](https://www.rfc-editor.org/info/rfc7696) - Guidelines for Cryptographic Algorithm Agility (BCP 201) | The IETF guidance on algorithm agility this posture is measured against. |
 | [NIST CSWP 39](https://doi.org/10.6028/NIST.CSWP.39) - Considerations for Achieving Cryptographic Agility: Strategies and Practices (Dec 2025) | The organizational and lifecycle framing of crypto-agility. |
@@ -68,11 +68,11 @@ integration is bespoke. The manifest gives them one predictable URL and one smal
 stable schema to read, the same convention `robots.txt` and `security.txt` established
 for their domains.
 
-## How to adopt it today
+## Producing a manifest
 
-The reference implementation is [qScan](https://github.com/dandelionlabs-io/pqc-tools)
-(pqc-tools). It can emit a manifest from a scan and validate a local one, entirely
-offline:
+The reference implementation lands in [qScan](https://github.com/quantakrypto/pqc-tools)
+(pqc-tools): an emitter that produces a manifest from a scan, and a validator for a
+local one, offline:
 
 ```sh
 # Emit the manifest to the conventional path (regenerate this in CI):

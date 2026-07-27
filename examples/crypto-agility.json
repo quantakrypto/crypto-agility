@@ -27,10 +27,10 @@
   },
   "attestation": { "url": "https://quantakrypto.com/attest/acme" },
   "policy": {
-    "source": "NIST IR 8547 (transition to post-quantum cryptography standards)",
+    "source": "NIST IR 8547",
     "deprecateClassicalAfter": 2030,
     "disallowClassicalAfter": 2035,
     "transitionDeadline": null,
-    "citation": "NIST IR 8547 (transition to post-quantum cryptography standards)"
+    "citation": "https://csrc.nist.gov/pubs/ir/8547/ipd"
   }
 }

@@ -32,8 +32,8 @@ argument, not just code.
 - **Verify, do not invent.** Every external standard cited must be checked against its
   primary source, with a correct title, number, and link. Do not add a citation you
   have not read.
-- **Cite normatively vs informatively with care.** RFC 2119 / 8174 / 8615 / 9110 and
-  CycloneDX CBOM are normative (the draft depends on them to be implementable). The
+- **Cite normatively vs informatively with care.** RFC 2119 / 8174 / 8259 / 3339 / 8615 /
+  9110 and CycloneDX CBOM are normative (the draft depends on them to be implementable). The
   crypto-agility survey references (RFC 7696, NIST CSWP 39, NIST IR 8547, NSM-10,
   ISO/IEC 23837, NIST SP 800-56C) are informative.
 
