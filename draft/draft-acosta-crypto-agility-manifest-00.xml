@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  TODO (before IETF submission): set the author's real email address.
-  It is currently the placeholder EMAIL-TBD@dandelionlabs.io (see the
-  <address><email> element in the <front> block below).
--->
 <rfc xmlns:xi="http://www.w3.org/2001/XInclude"
      ipr="trust200902"
      category="info"
@@ -19,8 +14,7 @@
     <author fullname="Leon Acosta" initials="L." surname="Acosta">
       <organization>Dandelion Labs</organization>
       <address>
-        <!-- TODO: replace this placeholder with the real address before submission. -->
-        <email>EMAIL-TBD@dandelionlabs.io</email>
+        <email>leon@quantakrypto.com</email>
       </address>
     </author>
 
@@ -171,7 +165,7 @@ https://example.com/.well-known/crypto-agility.json
       <t>
         This location uses the well-known URI mechanism of
         <xref target="RFC8615"/>, the same mechanism that hosts "security.txt"
-        <xref target="RFC9116"/>. The URI suffix "crypto-agility" is registered in
+        <xref target="RFC9116"/>. The URI suffix "crypto-agility.json" is registered in
         <xref target="iana"/>. A consumer that knows only an origin
         <bcp14>MUST</bcp14> be able to locate the manifest by resolving this path
         against that origin, with no out-of-band configuration.
@@ -484,6 +478,21 @@ https://example.com/.well-known/crypto-agility.json
         that has since migrated or regressed. "generatedAt" lets a consumer judge
         freshness and reject a manifest that is older than a policy it enforces.
       </t>
+      <t>
+        <strong>Relationship to security.txt.</strong> An origin that already publishes a
+        "security.txt" file <xref target="RFC9116"/> <bcp14>SHOULD</bcp14> co-locate this
+        manifest beside it under "/.well-known/", so that an operator who maintains one
+        maintains the other and the two describe a consistent security posture. RFC 9116
+        does not define a field for pointing at an arbitrary well-known resource, and its
+        "Encryption" field is reserved for a key or a certificate used to encrypt a
+        report to the operator, not for a posture document; a producer
+        <bcp14>MUST NOT</bcp14> repurpose "Encryption" to reference this manifest. Where an
+        operator wishes to make the link explicit, they <bcp14>MAY</bcp14> add a comment
+        line to "security.txt" naming the manifest's well-known location. A consumer that
+        has discovered a "security.txt" file <bcp14>SHOULD</bcp14> attempt to resolve this
+        manifest at its own well-known path independently, rather than relying on any such
+        reference.
+      </t>
     </section>
 
     <section anchor="security">
@@ -539,8 +548,7 @@ https://example.com/.well-known/crypto-agility.json
         <dt>URI suffix:</dt>
         <dd>crypto-agility.json</dd>
         <dt>Change controller:</dt>
-        <dd>[TODO: to be assigned on publication. The authors propose the IETF, or, for
-          an independent submission, Dandelion Labs.]</dd>
+        <dd>IETF</dd>
         <dt>Specification document(s):</dt>
         <dd>This document.</dd>
         <dt>Status:</dt>
@@ -752,7 +760,7 @@ https://example.com/.well-known/crypto-agility.json
       </t>
       <t>
         Editorial note: before submission, the author's contact email address, which
-        currently reads "EMAIL-TBD@dandelionlabs.io" in the front matter, and the IANA
+        currently reads "leon@quantakrypto.com" in the front matter, and the IANA
         change-controller entry in <xref target="iana"/>, must be replaced with final
         values.
       </t>

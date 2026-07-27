@@ -4,7 +4,7 @@
 - **Category:** Informational
 - **IPR:** trust200902
 - **Submission type:** IETF (individual submission)
-- **Author:** Leon Acosta, Dandelion Labs (contact: `EMAIL-TBD@dandelionlabs.io`, TODO: set the real email before submission)
+- **Author:** Leon Acosta, Dandelion Labs (contact: `leon@quantakrypto.com`)
 - **Date:** 2026
 
 > This Markdown file is a readable rendering of the Internet-Draft so it can be
@@ -109,7 +109,7 @@ https://example.com/.well-known/crypto-agility.json
 ```
 
 This location uses the well-known URI mechanism of [RFC8615], the same mechanism that
-hosts `security.txt` [RFC9116]. The URI suffix `crypto-agility` is registered in
+hosts `security.txt` [RFC9116]. The URI suffix `crypto-agility.json` is registered in
 Section 9. A consumer that knows only an origin MUST be able to locate the manifest by
 resolving this path against that origin, with no out-of-band configuration.
 
@@ -325,6 +325,18 @@ run, so that a stale manifest does not misrepresent a project that has since mig
 or regressed. `generatedAt` lets a consumer judge freshness and reject a manifest that
 is older than a policy it enforces.
 
+**Relationship to security.txt.** An origin that already publishes a `security.txt`
+file [RFC9116] SHOULD co-locate this manifest beside it under `/.well-known/`, so that
+an operator who maintains one maintains the other and the two describe a consistent
+security posture. RFC 9116 does not define a field for pointing at an arbitrary
+well-known resource, and its `Encryption` field is reserved for a key or a certificate
+used to encrypt a report to the operator, not for a posture document; a producer MUST
+NOT repurpose `Encryption` to reference this manifest. Where an operator wishes to make
+the link explicit, they MAY add a comment line to `security.txt` naming the manifest's
+well-known location. A consumer that has discovered a `security.txt` file SHOULD attempt
+to resolve this manifest at its own well-known path independently, rather than relying
+on any such reference.
+
 ## 8. Security Considerations
 
 **A manifest is a claim, not a proof.** Nothing about serving a manifest establishes
@@ -364,8 +376,7 @@ IANA is requested to register the following well-known URI in the "Well-Known UR
 registry defined by [RFC8615].
 
 - **URI suffix:** crypto-agility.json
-- **Change controller:** [TODO: to be assigned on publication. The authors propose the
-  IETF, or, for an independent submission, Dandelion Labs.]
+- **Change controller:** IETF
 - **Specification document(s):** This document.
 - **Status:** permanent
 - **Related information:** The resource is a JSON [RFC8259] document with media type
@@ -380,10 +391,6 @@ This document is an individual proposal published to solicit review. It is not t
 product of any IETF working group, it does not represent IETF consensus, and it is not
 a standard. The reference implementation, a schema, and examples are maintained in the
 open at the repository from which this draft originates.
-
-Editorial note: before submission, the author's contact email address, which currently
-reads `EMAIL-TBD@dandelionlabs.io` in the front matter, and the IANA change-controller
-entry in Section 9, must be replaced with final values.
 
 ## 11. Normative References
 

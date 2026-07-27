@@ -66,8 +66,7 @@ be edited separately.
 
 ## Before an IETF submission
 
-The draft carries known placeholders that a human maintainer must resolve before
-submission:
-
-- the author contact email (`EMAIL-TBD@dandelionlabs.io`);
-- the IANA change-controller entry in the IANA Considerations section.
+The draft is kept in submission-ready shape: the author contact
+(`leon@quantakrypto.com`) and the IANA change-controller (`IETF`) are set. Validate the
+XML with `xmllint --noout` and, ideally, render it through `xml2rfc` before submitting a
+new revision, so the datatracker upload does not bounce on a format error.

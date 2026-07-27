@@ -124,5 +124,5 @@ regardless of the repository's Apache-2.0 license; contributing changes to the d
 means agreeing those changes may be contributed under the IETF Trust's terms. The
 repository code, schema, and examples are licensed under [Apache-2.0](LICENSE).
 
-The draft contains a placeholder author email (`EMAIL-TBD@dandelionlabs.io`) that must
-be set to a real address before any IETF submission.
+The draft lists `leon@quantakrypto.com` as the author contact. Correspondence about the
+proposal is welcome there or via issues on this repository.
