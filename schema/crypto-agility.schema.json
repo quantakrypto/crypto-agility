@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dandelionlabs.io/schema/crypto-agility.schema.json",
+  "title": "Crypto-Agility Manifest",
+  "description": "A small, versioned, machine-readable JSON document a project publishes at /.well-known/crypto-agility.json to declare its cryptographic posture, CBOM summary, optional attestation link, and migration policy. See draft-acosta-crypto-agility-manifest-00.",
+  "type": "object",
+  "required": [
+    "version",
+    "manifestType",
+    "generatedAt",
+    "generator",
+    "subject",
+    "posture",
+    "cbomSummary",
+    "policy"
+  ],
+  "properties": {
+    "version": {
+      "description": "Manifest schema version. Consumers MUST branch on it and MUST reject a version they do not understand. This document describes version 1.",
+      "type": "integer",
+      "const": 1
+    },
+    "manifestType": {
+      "description": "Discriminator so a consumer can tell this document apart from other JSON served at a well-known path.",
+      "type": "string",
+      "const": "crypto-agility"
+    },
+    "generatedAt": {
+      "description": "When the manifest was generated, as an ISO 8601 / RFC 3339 timestamp.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "description": "What produced the manifest.",
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "description": "Name of the tool that generated the manifest.",
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "description": "Version of the generating tool.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "subject": {
+      "description": "What the manifest describes.",
+      "type": "object",
+      "required": ["root", "repository", "commit"],
+      "properties": {
+        "root": {
+          "description": "The scanned root the manifest describes.",
+          "type": "string",
+          "minLength": 1
+        },
+        "repository": {
+          "description": "Source repository URL, or null when unknown.",
+          "type": ["string", "null"]
+        },
+        "commit": {
+          "description": "Commit identifier the manifest was derived from, or null when unknown.",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "posture": {
+      "description": "The distilled cryptographic posture.",
+      "type": "object",
+      "required": [
+        "readinessScore",
+        "hybridKexInUse",
+        "quantumVulnerable",
+        "hndlExposedCount"
+      ],
+      "properties": {
+        "readinessScore": {
+          "description": "Readiness score from 0 to 100. 100 means no classical asymmetric cryptography was found.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "hybridKexInUse": {
+          "description": "Whether the project negotiates hybrid post-quantum key exchange. null means not determined by this generator, which is distinct from false.",
+          "type": ["boolean", "null"]
+        },
+        "quantumVulnerable": {
+          "description": "Counts of quantum-vulnerable findings.",
+          "type": "object",
+          "required": ["total", "bySeverity"],
+          "properties": {
+            "total": {
+              "description": "Count of quantum-vulnerable findings.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "bySeverity": {
+              "description": "Counts keyed by severity. All keys MUST be present.",
+              "type": "object",
+              "required": ["critical", "high", "medium", "low", "info"],
+              "properties": {
+                "critical": { "type": "integer", "minimum": 0 },
+                "high": { "type": "integer", "minimum": 0 },
+                "medium": { "type": "integer", "minimum": 0 },
+                "low": { "type": "integer", "minimum": 0 },
+                "info": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "hndlExposedCount": {
+          "description": "How many findings are exposed to harvest-now-decrypt-later.",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cbomSummary": {
+      "description": "A compact summary of, and pointer to, the full CycloneDX CBOM.",
+      "type": "object",
+      "required": ["serialNumber", "assetCount", "algorithmFamilies"],
+      "properties": {
+        "serialNumber": {
+          "description": "The CycloneDX serialNumber (urn:uuid:...) of the full CBOM this summary was derived from.",
+          "type": "string",
+          "minLength": 1
+        },
+        "assetCount": {
+          "description": "Number of distinct cryptographic-asset components in the full CBOM.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "algorithmFamilies": {
+          "description": "Per algorithm family in use, most-referenced first.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["family", "count", "quantumVulnerable"],
+            "properties": {
+              "family": {
+                "description": "Algorithm family name, for example RSA or ECDH.",
+                "type": "string",
+                "minLength": 1
+              },
+              "count": {
+                "description": "Number of references to this family.",
+                "type": "integer",
+                "minimum": 0
+              },
+              "quantumVulnerable": {
+                "description": "Whether this family is quantum-vulnerable.",
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "attestation": {
+      "description": "Optional link to a machine-verifiable posture credential. The URL is recorded verbatim and is not fetched by the generator. Omitted when none is declared.",
+      "type": "object",
+      "required": ["url"],
+      "properties": {
+        "url": {
+          "description": "URL of the posture credential.",
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "policy": {
+      "description": "The migration policy the project declares it is measured against.",
+      "type": "object",
+      "required": [
+        "source",
+        "deprecateClassicalAfter",
+        "disallowClassicalAfter",
+        "transitionDeadline",
+        "citation"
+      ],
+      "properties": {
+        "source": {
+          "description": "Label for the policy source: a standard's name, or operator-declared.",
+          "type": "string",
+          "minLength": 1
+        },
+        "deprecateClassicalAfter": {
+          "description": "Year after which classical public-key cryptography is deprecated.",
+          "type": "integer"
+        },
+        "disallowClassicalAfter": {
+          "description": "Year after which classical public-key cryptography is disallowed.",
+          "type": "integer"
+        },
+        "transitionDeadline": {
+          "description": "An operator-declared migration deadline (ISO date or year), or null.",
+          "type": ["string", "null"]
+        },
+        "citation": {
+          "description": "Citation for the deadlines.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

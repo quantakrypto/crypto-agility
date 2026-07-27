@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "manifestType": "crypto-agility",
+  "generatedAt": "2026-07-27T04:57:12.323Z",
+  "generator": { "name": "qScan", "version": "0.5.0" },
+  "subject": {
+    "root": ".",
+    "repository": "https://github.com/acme/widget-service",
+    "commit": "9f2c1ab7d3e04c5b8a6f0e21d47c9b3e5a1f8c02"
+  },
+  "posture": {
+    "readinessScore": 74,
+    "hybridKexInUse": true,
+    "quantumVulnerable": {
+      "total": 2,
+      "bySeverity": { "critical": 0, "high": 2, "medium": 0, "low": 0, "info": 0 }
+    },
+    "hndlExposedCount": 2
+  },
+  "cbomSummary": {
+    "serialNumber": "urn:uuid:5834348b-e27b-4f71-8752-f0497d98166f",
+    "assetCount": 2,
+    "algorithmFamilies": [
+      { "family": "ECDH", "count": 1, "quantumVulnerable": true },
+      { "family": "RSA", "count": 1, "quantumVulnerable": true }
+    ]
+  },
+  "attestation": { "url": "https://quantakrypto.com/attest/acme" },
+  "policy": {
+    "source": "NIST IR 8547",
+    "deprecateClassicalAfter": 2030,
+    "disallowClassicalAfter": 2035,
+    "transitionDeadline": null,
+    "citation": "https://csrc.nist.gov/pubs/ir/8547/ipd"
+  }
+}
