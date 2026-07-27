@@ -35,7 +35,9 @@ Crypto-agility, the capability to replace and adapt cryptographic algorithms whi
 preserving security and operations, is a mature and well-documented objective. It is
 treated at the algorithm-agility level by [RFC7696], and at the organizational and
 lifecycle level by [NIST-CSWP-39]. The migration timelines that give crypto-agility
-its present urgency are set out in [NSM-10] and [NIST-IR-8547]. The inventory of what
+its present urgency are set out in [NSM-10] and [NIST-IR-8547], and general
+engineering guidance for the post-quantum transition itself is collected in
+[RFC9958]. The inventory of what
 cryptography a system actually uses now has a standard representation, the
 Cryptography Bill of Materials (CBOM) defined in [CycloneDX-CBOM].
 
@@ -410,6 +412,9 @@ entry in Section 9, must be replaced with final values.
 - **[RFC9116]** Foudil, E. and Y. Shafranovich, "A File Format to Aid in Security
   Vulnerability Disclosure", RFC 9116, April 2022,
   <https://www.rfc-editor.org/info/rfc9116>.
+- **[RFC9958]** Banerjee, A., Reddy.K, T., Schoinianakis, D., Hollebeek, T., and M.
+  Ounsworth, "Post-Quantum Cryptography for Engineers", RFC 9958, June 2026,
+  <https://www.rfc-editor.org/info/rfc9958>.
 - **[RFC7696]** Housley, R., "Guidelines for Cryptographic Algorithm Agility and
   Selecting Mandatory-to-Implement Algorithms", BCP 201, RFC 7696, November 2015,
   <https://www.rfc-editor.org/info/rfc7696>.

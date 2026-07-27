@@ -67,7 +67,9 @@
         <xref target="RFC7696"/>, and at the organizational and lifecycle level by
         <xref target="NIST-CSWP-39"/>. The migration timelines that give crypto-agility
         its present urgency are set out in <xref target="NSM-10"/> and
-        <xref target="NIST-IR-8547"/>. The inventory of what cryptography a system
+        <xref target="NIST-IR-8547"/>, and general engineering guidance for the
+        post-quantum transition itself is collected in <xref target="RFC9958"/>. The
+        inventory of what cryptography a system
         actually uses now has a standard representation, the Cryptography Bill of
         Materials (CBOM) defined in <xref target="CycloneDX-CBOM"/>.
       </t>
@@ -652,6 +654,20 @@ https://example.com/.well-known/crypto-agility.json
         </front>
         <seriesInfo name="RFC" value="9116"/>
         <seriesInfo name="DOI" value="10.17487/RFC9116"/>
+      </reference>
+
+      <reference anchor="RFC9958" target="https://www.rfc-editor.org/info/rfc9958">
+        <front>
+          <title>Post-Quantum Cryptography for Engineers</title>
+          <author initials="A." surname="Banerjee" fullname="A. Banerjee"/>
+          <author initials="T." surname="Reddy.K" fullname="T. Reddy.K"/>
+          <author initials="D." surname="Schoinianakis" fullname="D. Schoinianakis"/>
+          <author initials="T." surname="Hollebeek" fullname="T. Hollebeek"/>
+          <author initials="M." surname="Ounsworth" fullname="M. Ounsworth"/>
+          <date year="2026" month="June"/>
+        </front>
+        <seriesInfo name="RFC" value="9958"/>
+        <seriesInfo name="DOI" value="10.17487/RFC9958"/>
       </reference>
 
       <reference anchor="RFC7696" target="https://www.rfc-editor.org/info/rfc7696">
