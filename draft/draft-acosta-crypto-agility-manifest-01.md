@@ -21,8 +21,9 @@ This document defines a discoverable, machine-readable JSON document, the
 crypto-agility manifest, that a website or source repository publishes at the
 well-known URI `/.well-known/crypto-agility.json` to declare its cryptographic
 posture: a readiness summary, a compact Cryptography Bill of Materials (CBOM)
-summary, an optional link to a posture attestation, and the migration policy it
-measures itself against. The manifest lets an automated consumer, such as an AI
+summary, an optional link to a posture attestation, the migration policy it
+measures itself against, and an optional self-declared conformance statement with
+justified exceptions. The manifest lets an automated consumer, such as an AI
 coding agent, a continuous-integration bot, or an auditor's tool, discover a
 project's crypto posture the way it already discovers a security contact from
 `security.txt`. The manifest is a public, self-reported claim; it is not a proof.
@@ -253,6 +254,35 @@ example the 2030 and 2035 milestones of [NIST-IR-8547] and [NSM-10].
 National-security profiles such as the milestones of [NSM-10] are a valid
 `operator-declared` choice.
 
+### 5.10. conformance (optional)
+
+An OPTIONAL object stating the subject's self-declared conformance to the policy in
+Section 5.9, together with any residual quantum-vulnerable findings it accepts. It lets
+a subject that is not at a readiness score of 100 declare that its remaining classical
+cryptography is known and accepted under the policy, rather than an oversight. When
+present, it has two REQUIRED members and two OPTIONAL members:
+
+- **policy:** a string labelling the policy the conformance is asserted against. It
+  SHOULD match the `source` member of the `policy` object.
+- **status:** a string, one of `conformant`, `conditional`, or `nonconformant`.
+  `conformant` means the subject meets the declared policy outright. `conditional`
+  means the subject does not meet the numeric bar, but every residual quantum-vulnerable
+  finding is enumerated in `exceptions` with a justification. `nonconformant` means
+  residual findings exist without accepted exceptions.
+- **statement:** an OPTIONAL string carrying a human-readable rationale for the status.
+- **exceptions:** an OPTIONAL array of the residual findings the subject accepts. Each
+  element is an object with a REQUIRED `family` string (the algorithm family or finding
+  the exception covers, for example `RSA` or `X25519`), a REQUIRED `justification`
+  string, and an OPTIONAL `acceptedUntil` integer year (typically aligned with a policy
+  deadline) or null.
+
+A self-published `conformance` status is a claim of the same kind as every other value
+in this document, not a proof (Section 8). A consumer MUST NOT treat a `conformant` or
+`conditional` status as assurance unless the manifest also carries an `attestation`
+(Section 5.8) that covers the asserted conformance and that the consumer has verified. A
+producer that emits a `conformant` or `conditional` status SHOULD also provide an
+`attestation`.
+
 ## 6. Examples
 
 The following is a complete, conforming manifest for a repository that has migrated
@@ -296,13 +326,32 @@ RSA and ECDH in two places, and adopts the [NIST-IR-8547] transition timeline.
     "disallowClassicalAfter": 2035,
     "transitionDeadline": null,
     "citation": "https://csrc.nist.gov/pubs/ir/8547/ipd"
+  },
+  "conformance": {
+    "policy": "NIST IR 8547",
+    "status": "conditional",
+    "statement": "Residual classical crypto is transition-accepted.",
+    "exceptions": [
+      {
+        "family": "ECDH",
+        "justification": "classical half of a hybrid KEX",
+        "acceptedUntil": 2030
+      },
+      {
+        "family": "RSA",
+        "justification": "public-TLS cert chain; no PQC CA path yet",
+        "acceptedUntil": 2030
+      }
+    ]
   }
 }
 ```
 
+The `conformance` object above is optional. Because its `status` is `conditional`, the
+`attestation` link is what lets a consumer treat it as more than a claim (Section 5.10).
 A producer that cannot observe live key exchange (a static source scan) sets
-`hybridKexInUse` to null and omits `attestation` when none is declared. The rest of
-the document is unchanged.
+`hybridKexInUse` to null and omits both `attestation` and `conformance` when neither is
+declared. The rest of the document is unchanged.
 
 ## 7. Operational Considerations
 
@@ -349,6 +398,16 @@ from a verifiable credential (see Section 7), not from the manifest alone. A hos
 careless producer can overstate readiness, understate vulnerable findings, or advertise
 deadlines it does not meet. Gating decisions on an unverified manifest inherits that
 risk.
+
+**Self-declared conformance is not a pass.** The optional `conformance` object
+(Section 5.10) lets a producer assert a `conformant` or `conditional` status and
+enumerate accepted exceptions. This is a producer's own assertion and carries no more
+weight than the readiness score beside it. A consumer MUST NOT treat a self-published
+status as a pass, an approval, or evidence of accepted risk unless the manifest also
+carries an `attestation` (Section 5.8) that covers the asserted conformance and that the
+consumer has independently verified. Absent a verified attestation, the `status` and
+`exceptions` are informative context for a human reviewer, not an authorization to
+proceed.
 
 **Do not leak internal detail.** The manifest is public. A producer MUST NOT place
 secrets, key material, source snippets, file paths, internal hostnames, or any

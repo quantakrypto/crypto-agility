@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dandelionlabs.io/schema/crypto-agility.schema.json",
   "title": "Crypto-Agility Manifest",
-  "description": "A small, versioned, machine-readable JSON document a project publishes at /.well-known/crypto-agility.json to declare its cryptographic posture, CBOM summary, optional attestation link, and migration policy. See draft-acosta-crypto-agility-manifest-00.",
+  "description": "A small, versioned, machine-readable JSON document a project publishes at /.well-known/crypto-agility.json to declare its cryptographic posture, CBOM summary, optional attestation link, migration policy, and optional self-declared conformance. See draft-acosta-crypto-agility-manifest-01.",
   "type": "object",
   "required": [
     "version",
@@ -203,6 +203,51 @@
           "description": "Citation for the deadlines.",
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "conformance": {
+      "description": "Optional. The subject's self-declared conformance to its stated policy, with any residual quantum-vulnerable findings enumerated as justified exceptions. A self-published status is a claim, not a proof: a consumer MUST NOT treat a 'conformant' or 'conditional' status as assurance unless the manifest also carries an 'attestation' that covers it. Omitted when not declared.",
+      "type": "object",
+      "required": ["policy", "status"],
+      "properties": {
+        "policy": {
+          "description": "Label for the policy this conformance is asserted against. SHOULD match the 'source' of the 'policy' object.",
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "description": "conformant: the subject meets the declared policy outright. conditional: the subject does not meet the numeric bar, but every residual quantum-vulnerable finding is enumerated in 'exceptions' with a justification. nonconformant: residual findings exist without accepted exceptions.",
+          "type": "string",
+          "enum": ["conformant", "conditional", "nonconformant"]
+        },
+        "statement": {
+          "description": "Optional human-readable rationale for the status.",
+          "type": "string"
+        },
+        "exceptions": {
+          "description": "Optional. Residual quantum-vulnerable findings the subject accepts, each with a justification. Present the residual findings that keep the readiness score below 100 but are accepted under the declared policy.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["family", "justification"],
+            "properties": {
+              "family": {
+                "description": "Algorithm family or finding this exception covers, for example RSA or X25519.",
+                "type": "string",
+                "minLength": 1
+              },
+              "justification": {
+                "description": "Why this residual finding is accepted under the declared policy.",
+                "type": "string",
+                "minLength": 1
+              },
+              "acceptedUntil": {
+                "description": "Optional year the exception is accepted until, typically aligned with a policy deadline, or null.",
+                "type": ["integer", "null"]
+              }
+            }
+          }
         }
       }
     }
