@@ -108,9 +108,9 @@ schema/    JSON Schema (draft 2020-12) for the manifest, version 1
 examples/  a realistic, schema-valid example manifest
 ```
 
-- [`draft/draft-acosta-crypto-agility-manifest-00.xml`](draft/draft-acosta-crypto-agility-manifest-00.xml)
+- [`draft/draft-acosta-crypto-agility-manifest-01.xml`](draft/draft-acosta-crypto-agility-manifest-01.xml)
   - the authoritative xml2rfc v3 source.
-- [`draft/draft-acosta-crypto-agility-manifest-00.md`](draft/draft-acosta-crypto-agility-manifest-00.md)
+- [`draft/draft-acosta-crypto-agility-manifest-01.md`](draft/draft-acosta-crypto-agility-manifest-01.md)
   - a readable rendering for GitHub.
 
 ## Status and how to contribute

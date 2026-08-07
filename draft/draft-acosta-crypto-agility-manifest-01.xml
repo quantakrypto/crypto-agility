@@ -3,17 +3,20 @@
      ipr="trust200902"
      category="info"
      submissionType="IETF"
-     docName="draft-acosta-crypto-agility-manifest-00"
+     docName="draft-acosta-crypto-agility-manifest-01"
      version="3"
      consensus="false">
 
   <front>
     <title abbrev="Crypto-Agility Manifest">A Well-Known URI and JSON Format for Publishing Cryptographic Posture (the Crypto-Agility Manifest)</title>
-    <seriesInfo name="Internet-Draft" value="draft-acosta-crypto-agility-manifest-00"/>
+    <seriesInfo name="Internet-Draft" value="draft-acosta-crypto-agility-manifest-01"/>
 
     <author fullname="Leon Acosta" initials="L." surname="Acosta">
       <organization>QuantaKrypto</organization>
       <address>
+        <postal>
+          <country>Argentina</country>
+        </postal>
         <email>leon@quantakrypto.com</email>
       </address>
     </author>
@@ -33,8 +36,9 @@
         crypto-agility manifest, that a website or source repository publishes at
         the well-known URI "/.well-known/crypto-agility.json" to declare its
         cryptographic posture: a readiness summary, a compact Cryptography Bill of
-        Materials (CBOM) summary, an optional link to a posture attestation, and the
-        migration policy it measures itself against. The manifest lets an automated
+        Materials (CBOM) summary, an optional link to a posture attestation, the
+        migration policy it measures itself against, and an optional self-declared
+        conformance statement with justified exceptions. The manifest lets an automated
         consumer, such as an AI coding agent, a continuous-integration bot, or an
         auditor's tool, discover a project's crypto posture the way it already
         discovers a security contact from "security.txt". The manifest is a public,
@@ -392,6 +396,50 @@ https://example.com/.well-known/crypto-agility.json
           <xref target="NSM-10"/> are a valid "operator-declared" choice.
         </t>
       </section>
+
+      <section anchor="field-conformance">
+        <name>conformance (optional)</name>
+        <t>
+          An <bcp14>OPTIONAL</bcp14> object stating the subject's self-declared
+          conformance to the policy in <xref target="field-policy"/>, together with any
+          residual quantum-vulnerable findings it accepts. It lets a subject that is not
+          at a readiness score of 100 declare that its remaining classical cryptography
+          is known and accepted under the policy, not an oversight. When present,
+          it has two <bcp14>REQUIRED</bcp14> members and two <bcp14>OPTIONAL</bcp14>
+          members:
+        </t>
+        <dl newline="false" spacing="normal">
+          <dt>policy:</dt>
+          <dd>a string naming the policy the conformance is asserted against. It
+            <bcp14>SHOULD</bcp14> match the "source" member of the "policy" object.</dd>
+          <dt>status:</dt>
+          <dd>a string, one of "conformant", "conditional", or "nonconformant".
+            "conformant" means the subject meets the declared policy outright.
+            "conditional" means the subject does not meet the numeric bar, but every
+            residual quantum-vulnerable finding is enumerated in "exceptions" with a
+            justification. "nonconformant" means residual findings exist without accepted
+            exceptions.</dd>
+          <dt>statement:</dt>
+          <dd>an <bcp14>OPTIONAL</bcp14> string carrying a human-readable rationale for
+            the status.</dd>
+          <dt>exceptions:</dt>
+          <dd>an <bcp14>OPTIONAL</bcp14> array of the residual findings the subject
+            accepts. Each element is an object with a <bcp14>REQUIRED</bcp14> "family"
+            string (the algorithm family or finding the exception covers, for example
+            "RSA" or "X25519"), a <bcp14>REQUIRED</bcp14> "justification" string, and an
+            <bcp14>OPTIONAL</bcp14> "acceptedUntil" integer year (typically aligned with a
+            policy deadline) or null.</dd>
+        </dl>
+        <t>
+          A self-published "conformance" status is a claim of the same kind as every other
+          value in this document, not a proof (<xref target="security"/>). A consumer
+          <bcp14>MUST NOT</bcp14> treat a "conformant" or "conditional" status as assurance
+          unless the manifest also carries an "attestation" (<xref
+          target="field-attestation"/>) that covers the asserted conformance and that the
+          consumer has verified. A producer that emits a "conformant" or "conditional"
+          status <bcp14>SHOULD</bcp14> also provide an "attestation".
+        </t>
+      </section>
     </section>
 
     <section anchor="examples">
@@ -439,13 +487,32 @@ https://example.com/.well-known/crypto-agility.json
     "disallowClassicalAfter": 2035,
     "transitionDeadline": null,
     "citation": "https://csrc.nist.gov/pubs/ir/8547/ipd"
+  },
+  "conformance": {
+    "policy": "NIST IR 8547",
+    "status": "conditional",
+    "statement": "Residual classical crypto is transition-accepted.",
+    "exceptions": [
+      {
+        "family": "ECDH",
+        "justification": "classical half of a hybrid KEX",
+        "acceptedUntil": 2030
+      },
+      {
+        "family": "RSA",
+        "justification": "public-TLS cert chain; no PQC CA path yet",
+        "acceptedUntil": 2030
+      }
+    ]
   }
 }
 ]]></sourcecode>
       <t>
-        A producer that cannot observe live key exchange (a static source scan) sets
-        "hybridKexInUse" to null and omits "attestation" when none is declared. The
-        rest of the document is unchanged.
+        The "conformance" object above is optional. Because its "status" is
+        "conditional", the "attestation" link is what lets a consumer treat it as more
+        than a claim (<xref target="field-conformance"/>). A producer that cannot observe
+        live key exchange (a static source scan) sets "hybridKexInUse" to null and omits
+        both "attestation" and "conformance" when neither is declared.
       </t>
     </section>
 
@@ -506,8 +573,20 @@ https://example.com/.well-known/crypto-agility.json
         posture; a consumer that requires assurance <bcp14>MUST</bcp14> obtain it from a
         verifiable credential (see <xref target="operational"/>), not from the manifest
         alone. A hostile or careless producer can overstate readiness, understate
-        vulnerable findings, or advertise deadlines it does not meet. Gating decisions
-        on an unverified manifest inherits that risk.
+        vulnerable findings, or advertise deadlines it does not meet. A consumer that
+        gates a decision on an unverified manifest inherits that risk.
+      </t>
+      <t>
+        <strong>Self-declared conformance is not a pass.</strong> The optional
+        "conformance" object (<xref target="field-conformance"/>) lets a producer assert
+        a "conformant" or "conditional" status and enumerate accepted exceptions. This is
+        a producer's own assertion and carries no more weight than the readiness score
+        itself. A consumer <bcp14>MUST NOT</bcp14> treat a self-published status as a
+        pass, an approval, or evidence of accepted risk unless the manifest also carries
+        an "attestation" (<xref target="field-attestation"/>) that covers the asserted
+        conformance and that the consumer has independently verified. Absent a verified
+        attestation, the "status" and "exceptions" are informative context for a human
+        reviewer, not an authorization to proceed.
       </t>
       <t>
         <strong>Do not leak internal detail.</strong> The manifest is public. A producer
@@ -755,9 +834,7 @@ https://example.com/.well-known/crypto-agility.json
     <section anchor="status-of-this-proposal">
       <name>Status of This Proposal</name>
       <t>
-        This document is an individual proposal published to solicit review. It is not
-        the product of any IETF working group, it does not represent IETF consensus, and
-        it is not a standard. The reference implementation, a schema, and examples are
+        This document is an individual Internet-Draft, the first step of the IETF process, published to solicit review. It is not the product of an IETF working group and does not represent IETF consensus, and it is not yet a standard: it is a proposal put forward to be reviewed and, if it has merit, advanced. The reference implementation, a schema, and examples are
         maintained in the open at the repository from which this draft originates.
       </t>
     </section>

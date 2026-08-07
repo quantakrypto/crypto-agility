@@ -32,5 +32,14 @@
     "disallowClassicalAfter": 2035,
     "transitionDeadline": null,
     "citation": "https://csrc.nist.gov/pubs/ir/8547/ipd"
+  },
+  "conformance": {
+    "policy": "NIST IR 8547",
+    "status": "conditional",
+    "statement": "Residual classical crypto is transition-accepted.",
+    "exceptions": [
+      { "family": "ECDH", "justification": "classical half of a hybrid KEX", "acceptedUntil": 2030 },
+      { "family": "RSA", "justification": "public-TLS cert chain; no PQC CA path yet", "acceptedUntil": 2030 }
+    ]
   }
 }

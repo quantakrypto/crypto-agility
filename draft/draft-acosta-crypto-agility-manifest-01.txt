@@ -4,13 +4,13 @@
 
 Network Working Group                                          L. Acosta
 Internet-Draft                                              QuantaKrypto
-Intended status: Informational                              27 July 2026
-Expires: 28 January 2027
+Intended status: Informational                             7 August 2026
+Expires: 8 February 2027
 
 
  A Well-Known URI and JSON Format for Publishing Cryptographic Posture
                      (the Crypto-Agility Manifest)
-                draft-acosta-crypto-agility-manifest-00
+                draft-acosta-crypto-agility-manifest-01
 
 Abstract
 
@@ -19,8 +19,9 @@ Abstract
    publishes at the well-known URI "/.well-known/crypto-agility.json" to
    declare its cryptographic posture: a readiness summary, a compact
    Cryptography Bill of Materials (CBOM) summary, an optional link to a
-   posture attestation, and the migration policy it measures itself
-   against.  The manifest lets an automated consumer, such as an AI
+   posture attestation, the migration policy it measures itself against,
+   and an optional self-declared conformance statement with justified
+   exceptions.  The manifest lets an automated consumer, such as an AI
    coding agent, a continuous-integration bot, or an auditor's tool,
    discover a project's crypto posture the way it already discovers a
    security contact from "security.txt".  The manifest is a public,
@@ -46,16 +47,15 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 January 2027.
+   This Internet-Draft will expire on 8 February 2027.
 
 
 
 
 
-
-Acosta                   Expires 28 January 2027                [Page 1]
+Acosta                   Expires 8 February 2027                [Page 1]
 
-Internet-Draft           Crypto-Agility Manifest               July 2026
+Internet-Draft           Crypto-Agility Manifest             August 2026
 
 
 Copyright Notice
@@ -74,29 +74,45 @@ Copyright Notice
 
 Table of Contents
 
-   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
-     1.1.  Scope and Non-Goals . . . . . . . . . . . . . . . . . . .   3
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+     1.1.  Scope and Non-Goals . . . . . . . . . . . . . . . . . . .   4
    2.  Terminology and Conventions . . . . . . . . . . . . . . . . .   4
-   3.  The Well-Known URI  . . . . . . . . . . . . . . . . . . . . .   4
+   3.  The Well-Known URI  . . . . . . . . . . . . . . . . . . . . .   5
    4.  File Format . . . . . . . . . . . . . . . . . . . . . . . . .   5
-   5.  Field Definitions . . . . . . . . . . . . . . . . . . . . . .   5
-     5.1.  version . . . . . . . . . . . . . . . . . . . . . . . . .   5
+   5.  Field Definitions . . . . . . . . . . . . . . . . . . . . . .   6
+     5.1.  version . . . . . . . . . . . . . . . . . . . . . . . . .   6
      5.2.  manifestType  . . . . . . . . . . . . . . . . . . . . . .   6
      5.3.  generatedAt . . . . . . . . . . . . . . . . . . . . . . .   6
      5.4.  generator . . . . . . . . . . . . . . . . . . . . . . . .   6
      5.5.  subject . . . . . . . . . . . . . . . . . . . . . . . . .   6
-     5.6.  posture . . . . . . . . . . . . . . . . . . . . . . . . .   6
+     5.6.  posture . . . . . . . . . . . . . . . . . . . . . . . . .   7
      5.7.  cbomSummary . . . . . . . . . . . . . . . . . . . . . . .   7
-     5.8.  attestation (optional)  . . . . . . . . . . . . . . . . .   7
+     5.8.  attestation (optional)  . . . . . . . . . . . . . . . . .   8
      5.9.  policy  . . . . . . . . . . . . . . . . . . . . . . . . .   8
-   6.  Examples  . . . . . . . . . . . . . . . . . . . . . . . . . .   8
-   7.  Operational Considerations  . . . . . . . . . . . . . . . . .  10
-   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  11
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  11
-   10. Normative References  . . . . . . . . . . . . . . . . . . . .  12
-   11. Informative References  . . . . . . . . . . . . . . . . . . .  12
-   Appendix A.  Status of This Proposal  . . . . . . . . . . . . . .  14
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  14
+     5.10. conformance (optional)  . . . . . . . . . . . . . . . . .   9
+   6.  Examples  . . . . . . . . . . . . . . . . . . . . . . . . . .   9
+   7.  Operational Considerations  . . . . . . . . . . . . . . . . .  11
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  12
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
+   10. Normative References  . . . . . . . . . . . . . . . . . . . .  13
+   11. Informative References  . . . . . . . . . . . . . . . . . . .  14
+   Appendix A.  Status of This Proposal  . . . . . . . . . . . . . .  15
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  15
+
+
+
+
+
+
+
+
+
+
+
+Acosta                   Expires 8 February 2027                [Page 2]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
 
 1.  Introduction
 
@@ -106,14 +122,6 @@ Table of Contents
    level by [RFC7696], and at the organizational and lifecycle level by
    [NIST-CSWP-39].  Mechanism-level guidance for deriving keys when a
    classical and a post-quantum exchange are combined appears in
-
-
-
-Acosta                   Expires 28 January 2027                [Page 2]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
-
    [NIST-SP-800-56C], and security-evaluation criteria for quantum key
    distribution in [ISO-IEC-23837].  The migration timelines that give
    crypto-agility its present urgency are set out in [NSM-10] and
@@ -151,6 +159,17 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    migrate.  A consumer that needs component-level detail follows the
    CBOM pointer the manifest carries.
 
+
+
+
+
+
+
+Acosta                   Expires 8 February 2027                [Page 3]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
 1.1.  Scope and Non-Goals
 
    This document specifies the well-known URI, the media type, and the
@@ -162,14 +181,6 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    credential an "attestation" link points to.  The manifest is a self-
    reported claim (see Section 7); establishing whether that claim is
    true is out of scope and is the job of the linked attestation and of
-
-
-
-Acosta                   Expires 28 January 2027                [Page 3]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
-
    the consumer.
 
 2.  Terminology and Conventions
@@ -204,6 +215,17 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    object, array, string, number, boolean, and null.  In this document,
    "integer" denotes a JSON number with no fractional part.
 
+
+
+
+
+
+
+Acosta                   Expires 8 February 2027                [Page 4]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
 3.  The Well-Known URI
 
    A producer publishes its manifest at the path "/.well-known/crypto-
@@ -217,14 +239,6 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    consumer that knows only an origin MUST be able to locate the
    manifest by resolving this path against that origin, with no out-of-
    band configuration.
-
-
-
-
-Acosta                   Expires 28 January 2027                [Page 4]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
 
    A manifest published for a website or service SHOULD be served from
    the origin's web root at the path above.  A manifest that describes a
@@ -256,6 +270,18 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    source snippets, file contents, or any data not intended for public
    disclosure (see Section 8).
 
+
+
+
+
+
+
+
+Acosta                   Expires 8 February 2027                [Page 5]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
 5.  Field Definitions
 
    The manifest object has the members defined in this section.  Unless
@@ -268,19 +294,6 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    An integer.  The manifest schema version.  For this specification the
    value MUST be 1.  A consumer MUST reject a version it does not
    understand.
-
-
-
-
-
-
-
-
-
-Acosta                   Expires 28 January 2027                [Page 5]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
 
 5.2.  manifestType
 
@@ -317,6 +330,14 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    commit:  a string or null.  The commit identifier the manifest was
       derived from.  MUST be null when unknown.
 
+
+
+
+Acosta                   Expires 8 February 2027                [Page 6]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
 5.6.  posture
 
    An object carrying the distilled cryptographic posture.  It has four
@@ -329,15 +350,6 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
       from different producers are directly comparable.
 
    hybridKexInUse:  a boolean or null.  Whether the subject negotiates
-
-
-
-
-Acosta                   Expires 28 January 2027                [Page 6]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
-
       hybrid post-quantum key exchange.  A producer that cannot
       determine this (for example a static source scan, which cannot
       observe a negotiated key-exchange group) MUST set null.  A
@@ -374,6 +386,14 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
       "count" (the number of references to that family), and a REQUIRED
       boolean "quantumVulnerable".
 
+
+
+
+Acosta                   Expires 8 February 2027                [Page 7]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
 5.8.  attestation (optional)
 
    An OPTIONAL object.  When present, it has one REQUIRED string member:
@@ -383,16 +403,6 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
       fetch it when generating the manifest.  A producer MUST omit the
       "attestation" member entirely when no credential is declared,
       rather than emitting an empty or null value.
-
-
-
-
-
-
-Acosta                   Expires 28 January 2027                [Page 7]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
 
    The presence of an "attestation" link does not by itself make the
    manifest verifiable; it points a consumer to where verification can
@@ -431,6 +441,55 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    profiles such as the milestones of [NSM-10] are a valid "operator-
    declared" choice.
 
+
+
+
+
+Acosta                   Expires 8 February 2027                [Page 8]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
+5.10.  conformance (optional)
+
+   An OPTIONAL object stating the subject's self-declared conformance to
+   the policy in Section 5.9, together with any residual quantum-
+   vulnerable findings it accepts.  It lets a subject that is not at a
+   readiness score of 100 declare that its remaining classical
+   cryptography is known and accepted under the policy, not an
+   oversight.  When present, it has two REQUIRED members and two
+   OPTIONAL members:
+
+   policy:  a string naming the policy the conformance is asserted
+      against.  It SHOULD match the "source" member of the "policy"
+      object.
+
+   status:  a string, one of "conformant", "conditional", or
+      "nonconformant".  "conformant" means the subject meets the
+      declared policy outright.  "conditional" means the subject does
+      not meet the numeric bar, but every residual quantum-vulnerable
+      finding is enumerated in "exceptions" with a justification.
+      "nonconformant" means residual findings exist without accepted
+      exceptions.
+
+   statement:  an OPTIONAL string carrying a human-readable rationale
+      for the status.
+
+   exceptions:  an OPTIONAL array of the residual findings the subject
+      accepts.  Each element is an object with a REQUIRED "family"
+      string (the algorithm family or finding the exception covers, for
+      example "RSA" or "X25519"), a REQUIRED "justification" string, and
+      an OPTIONAL "acceptedUntil" integer year (typically aligned with a
+      policy deadline) or null.
+
+   A self-published "conformance" status is a claim of the same kind as
+   every other value in this document, not a proof (Section 8).  A
+   consumer MUST NOT treat a "conformant" or "conditional" status as
+   assurance unless the manifest also carries an "attestation"
+   (Section 5.8) that covers the asserted conformance and that the
+   consumer has verified.  A producer that emits a "conformant" or
+   "conditional" status SHOULD also provide an "attestation".
+
 6.  Examples
 
    The following is a complete, conforming manifest for a repository
@@ -442,12 +501,9 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
 
 
 
-
-
-
-Acosta                   Expires 28 January 2027                [Page 8]
+Acosta                   Expires 8 February 2027                [Page 9]
 
-Internet-Draft           Crypto-Agility Manifest               July 2026
+Internet-Draft           Crypto-Agility Manifest             August 2026
 
 
    {
@@ -486,25 +542,40 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
        "disallowClassicalAfter": 2035,
        "transitionDeadline": null,
        "citation": "https://csrc.nist.gov/pubs/ir/8547/ipd"
+     },
+     "conformance": {
+       "policy": "NIST IR 8547",
+       "status": "conditional",
+       "statement": "Residual classical crypto is transition-accepted.",
+       "exceptions": [
+         {
+           "family": "ECDH",
+           "justification": "classical half of a hybrid KEX",
+           "acceptedUntil": 2030
+         },
+         {
+
+
+
+Acosta                   Expires 8 February 2027               [Page 10]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
+           "family": "RSA",
+           "justification": "public-TLS cert chain; no PQC CA path yet",
+           "acceptedUntil": 2030
+         }
+       ]
      }
    }
 
-   A producer that cannot observe live key exchange (a static source
-   scan) sets "hybridKexInUse" to null and omits "attestation" when none
-   is declared.  The rest of the document is unchanged.
-
-
-
-
-
-
-
-
-
-Acosta                   Expires 28 January 2027                [Page 9]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
+   The "conformance" object above is optional.  Because its "status" is
+   "conditional", the "attestation" link is what lets a consumer treat
+   it as more than a claim (Section 5.10).  A producer that cannot
+   observe live key exchange (a static source scan) sets
+   "hybridKexInUse" to null and omits both "attestation" and
+   "conformance" when neither is declared.
 
 7.  Operational Considerations
 
@@ -539,6 +610,14 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    "security.txt" file [RFC9116] SHOULD co-locate this manifest beside
    it under "/.well-known/", so that an operator who maintains one
    maintains the other and the two describe a consistent security
+
+
+
+Acosta                   Expires 8 February 2027               [Page 11]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
    posture.  RFC 9116 does not define a field for pointing at an
    arbitrary well-known resource, and its "Encryption" field is reserved
    for a key or a certificate used to encrypt a report to the operator,
@@ -550,18 +629,6 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    manifest at its own well-known path independently, rather than
    relying on any such reference.
 
-
-
-
-
-
-
-
-Acosta                   Expires 28 January 2027               [Page 10]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
-
 8.  Security Considerations
 
    *A manifest is a claim, not a proof.* Nothing about serving a
@@ -570,8 +637,20 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    consumer that requires assurance MUST obtain it from a verifiable
    credential (see Section 7), not from the manifest alone.  A hostile
    or careless producer can overstate readiness, understate vulnerable
-   findings, or advertise deadlines it does not meet.  Gating decisions
-   on an unverified manifest inherits that risk.
+   findings, or advertise deadlines it does not meet.  A consumer that
+   gates a decision on an unverified manifest inherits that risk.
+
+   *Self-declared conformance is not a pass.* The optional "conformance"
+   object (Section 5.10) lets a producer assert a "conformant" or
+   "conditional" status and enumerate accepted exceptions.  This is a
+   producer's own assertion and carries no more weight than the
+   readiness score itself.  A consumer MUST NOT treat a self-published
+   status as a pass, an approval, or evidence of accepted risk unless
+   the manifest also carries an "attestation" (Section 5.8) that covers
+   the asserted conformance and that the consumer has independently
+   verified.  Absent a verified attestation, the "status" and
+   "exceptions" are informative context for a human reviewer, not an
+   authorization to proceed.
 
    *Do not leak internal detail.* The manifest is public.  A producer
    MUST NOT place secrets, key material, source snippets, file paths,
@@ -587,6 +666,14 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    *Retrieve over TLS.* A manifest retrieved over the network SHOULD be
    retrieved over HTTPS, so that a network attacker cannot substitute or
    tamper with it in transit.  A consumer SHOULD reject, or clearly mark
+
+
+
+Acosta                   Expires 8 February 2027               [Page 12]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
    as untrusted, a manifest retrieved over an unauthenticated channel.
    As with "security.txt" [RFC9116], a cross-origin redirect encountered
    while retrieving a manifest MUST NOT be treated as authoritative for
@@ -610,13 +697,6 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
    Change controller:  IETF
 
    Specification document(s):  This document.
-
-
-
-Acosta                   Expires 28 January 2027               [Page 11]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
 
    Status:  permanent
 
@@ -642,6 +722,14 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
               DOI 10.17487/RFC8259, December 2017,
               <https://www.rfc-editor.org/info/rfc8259>.
 
+
+
+
+Acosta                   Expires 8 February 2027               [Page 13]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
    [RFC3339]  Klyne, G. and C. Newman, "Date and Time on the Internet:
               Timestamps", RFC 3339, DOI 10.17487/RFC3339, July 2002,
               <https://www.rfc-editor.org/info/rfc3339>.
@@ -665,15 +753,6 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
 
 11.  Informative References
 
-
-
-
-
-Acosta                   Expires 28 January 2027               [Page 12]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
-
    [RFC9116]  Foudil, E. and Y. Shafranovich, "A File Format to Aid in
               Security Vulnerability Disclosure", RFC 9116,
               DOI 10.17487/RFC9116, April 2022,
@@ -695,6 +774,17 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
               Strategies and Practices", NIST CSWP 39,
               DOI 10.6028/NIST.CSWP.39, December 2025,
               <https://doi.org/10.6028/NIST.CSWP.39>.
+
+
+
+
+
+
+
+Acosta                   Expires 8 February 2027               [Page 14]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
 
    [NIST-SP-800-56C]
               Barker, E., Chen, L., and R. Davis, "Recommendation for
@@ -721,15 +811,6 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
               in-quantum-computing-while-mitigating-risks-to-vulnerable-
               cryptographic-systems/>.
 
-
-
-
-
-Acosta                   Expires 28 January 2027               [Page 13]
-
-Internet-Draft           Crypto-Agility Manifest               July 2026
-
-
    [ISO-IEC-23837]
               International Organization for Standardization /
               International Electrotechnical Commission, "Information
@@ -741,16 +822,29 @@ Internet-Draft           Crypto-Agility Manifest               July 2026
 
 Appendix A.  Status of This Proposal
 
-   This document is an individual proposal published to solicit review.
-   It is not the product of any IETF working group, it does not
-   represent IETF consensus, and it is not a standard.  The reference
-   implementation, a schema, and examples are maintained in the open at
-   the repository from which this draft originates.
+   This document is an individual Internet-Draft, the first step of the
+   IETF process, published to solicit review.  It is not the product of
+   an IETF working group and does not represent IETF consensus, and it
+   is not yet a standard: it is a proposal put forward to be reviewed
+   and, if it has merit, advanced.  The reference implementation, a
+   schema, and examples are maintained in the open at the repository
+   from which this draft originates.
 
 Author's Address
 
+
+
+
+
+
+Acosta                   Expires 8 February 2027               [Page 15]
+
+Internet-Draft           Crypto-Agility Manifest             August 2026
+
+
    Leon Acosta
    QuantaKrypto
+   Argentina
    Email: leon@quantakrypto.com
 
 
@@ -781,4 +875,22 @@ Author's Address
 
 
 
-Acosta                   Expires 28 January 2027               [Page 14]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Acosta                   Expires 8 February 2027               [Page 16]

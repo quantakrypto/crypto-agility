@@ -7,7 +7,7 @@ argument, not just code.
 ## Where to start
 
 - **The specification** lives in [`draft/`](draft/). The
-  `draft-acosta-crypto-agility-manifest-00.xml` file is the authoritative source
+  `draft-acosta-crypto-agility-manifest-01.xml` file is the authoritative source
   (xml2rfc v3, RFC 7991 vocabulary); the `.md` file is a readable rendering kept in
   sync with it. If you change one, change the other.
 - **The contract** lives in [`schema/crypto-agility.schema.json`](schema/crypto-agility.schema.json)
@@ -48,7 +48,7 @@ directly, otherwise a short structural check over the schema's `required`, `type
 Check the draft XML is well-formed before opening a PR:
 
 ```sh
-xmllint --noout draft/draft-acosta-crypto-agility-manifest-00.xml
+xmllint --noout draft/draft-acosta-crypto-agility-manifest-01.xml
 ```
 
 ## Licensing and IETF Trust provisions
