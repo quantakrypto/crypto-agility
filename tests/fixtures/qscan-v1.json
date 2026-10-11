@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "manifestType": "crypto-agility",
+  "generatedAt": "2026-10-11T00:00:00Z",
+  "generator": {
+    "name": "qScan",
+    "version": "0.12.0"
+  },
+  "subject": {
+    "root": ".",
+    "repository": "quantakrypto/test-fixture",
+    "commit": "1111111111111111111111111111111111111111"
+  },
+  "posture": {
+    "readinessScore": 84,
+    "hybridKexInUse": true,
+    "quantumVulnerable": {
+      "total": 1,
+      "bySeverity": {
+        "critical": 0,
+        "high": 1,
+        "medium": 0,
+        "low": 0,
+        "info": 0
+      }
+    },
+    "hndlExposedCount": 1
+  },
+  "cbomSummary": {
+    "serialNumber": "urn:uuid:a6521fb2-36e8-44ff-8bb3-0e78cbb03a84",
+    "assetCount": 1,
+    "algorithmFamilies": [
+      {
+        "family": "RSA",
+        "count": 1,
+        "quantumVulnerable": true
+      }
+    ]
+  },
+  "policy": {
+    "source": "NIST IR 8547 (transition to post-quantum cryptography standards)",
+    "deprecateClassicalAfter": 2030,
+    "disallowClassicalAfter": 2035,
+    "transitionDeadline": null,
+    "citation": "NIST IR 8547 (transition to post-quantum cryptography standards)"
+  }
+}
