@@ -1,0 +1,500 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Crypto-Agility Manifest version 2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "manifestType",
+    "generatedAt",
+    "expiresAt",
+    "subject",
+    "observations",
+    "migration",
+    "profiles"
+  ],
+  "properties": {
+    "version": {
+      "const": 2
+    },
+    "manifestType": {
+      "const": "crypto-agility"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "origin",
+            "service",
+            "repository",
+            "artifact",
+            "device-fleet"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "environment": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "capability",
+          "value",
+          "method",
+          "observedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "capability": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "value": {
+            "enum": [
+              "supported",
+              "unsupported",
+              "unknown"
+            ]
+          },
+          "method": {
+            "enum": [
+              "observed",
+              "inferred",
+              "declared"
+            ]
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+          },
+          "evidenceIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "maxItems": 256,
+            "uniqueItems": true
+          }
+        }
+      },
+      "maxItems": 256
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mediaType",
+          "digest",
+          "subjectId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "uri": {
+            "type": "string",
+            "format": "uri",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "mediaType": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "digest": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "algorithm",
+              "value"
+            ],
+            "properties": {
+              "algorithm": {
+                "enum": [
+                  "sha-256",
+                  "sha-384",
+                  "sha-512"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^[0-9a-f]+$",
+                "minLength": 1,
+                "maxLength": 2048
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "algorithm": {
+                      "const": "sha-256"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "value": {
+                      "minLength": 64,
+                      "maxLength": 64
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "algorithm": {
+                      "const": "sha-384"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "value": {
+                      "minLength": 96,
+                      "maxLength": 96
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "algorithm": {
+                      "const": "sha-512"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "value": {
+                      "minLength": 128,
+                      "maxLength": 128
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "subjectId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        }
+      },
+      "maxItems": 256
+    },
+    "migration": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "usage",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "usage": {
+            "enum": [
+              "key-establishment",
+              "authentication",
+              "signature",
+              "encryption",
+              "other"
+            ]
+          },
+          "algorithm": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "status": {
+            "enum": [
+              "unknown",
+              "planned",
+              "blocked",
+              "in-progress",
+              "validated",
+              "deployed"
+            ]
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+          },
+          "profileIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "maxItems": 256,
+            "uniqueItems": true
+          },
+          "evidenceIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "maxItems": 256,
+            "uniqueItems": true
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "maxItems": 256
+          }
+        }
+      },
+      "maxItems": 256
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "endpointRole",
+          "deviceClass",
+          "protocol",
+          "keyEstablishment",
+          "authentication",
+          "fallback"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "endpointRole": {
+            "enum": [
+              "client",
+              "server",
+              "peer",
+              "gateway"
+            ]
+          },
+          "deviceClass": {
+            "enum": [
+              "browser",
+              "mobile",
+              "desktop",
+              "server",
+              "iot",
+              "embedded",
+              "industrial",
+              "network",
+              "other"
+            ]
+          },
+          "protocol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "keyEstablishment": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "maxItems": 256,
+            "uniqueItems": true
+          },
+          "authentication": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "maxItems": 256,
+            "uniqueItems": true
+          },
+          "fallback": {
+            "enum": [
+              "deny-classical",
+              "allow-classical",
+              "unknown"
+            ]
+          },
+          "constraints": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "maxItems": 256
+          },
+          "evidenceIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "maxItems": 256,
+            "uniqueItems": true
+          }
+        }
+      },
+      "maxItems": 64
+    },
+    "policies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "scope",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "maxItems": 256
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "findingId",
+          "reason",
+          "expiresAt"
+        ],
+        "properties": {
+          "findingId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "maxItems": 256
+    }
+  },
+  "$id": "https://quantakrypto.com/schema/crypto-agility-v2.schema.json"
+}

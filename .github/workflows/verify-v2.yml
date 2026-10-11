@@ -1,0 +1,73 @@
+name: Verify crypto-agility v2
+on:
+  pull_request:
+  push:
+    branches: [main, review/automation-first-02]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+      - name: Record exact tested commit
+        run: |
+          mkdir -p build/results
+          git rev-parse HEAD | tee build/results/commit.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+      - name: Install pinned validation dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          npm ci --ignore-scripts
+      - name: Build pinned OpenSSL with hybrid TLS support
+        run: |
+          bash scripts/build-test-openssl.sh build/openssl > build/results/openssl-build.log 2>&1
+          echo "OPENSSL_BINARY=$PWD/build/openssl/apps/openssl" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: quantakrypto/pqc-tools
+          ref: 6a81b5537eaedf61f259334b4e430e580c35942c
+          path: build/pqc-tools
+          persist-credentials: false
+      - name: Build pinned qScan integration dependency
+        working-directory: build/pqc-tools
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+      - name: Unit, adversarial, real TLS, interoperability and performance tests
+        env:
+          REQUIRE_HYBRID_TLS: '1'
+          REQUIRE_QSCAN_INTEROP: '1'
+          QSCAN_ROOT: ${{ github.workspace }}/build/pqc-tools
+        run: |
+          set -o pipefail
+          python scripts/check-tests.py 2>&1 | tee build/results/tests.log
+      - name: Validate v2 example (expected findings)
+        run: |
+          python tools/verifier.py examples/crypto-agility-v2.json --now 2026-10-12T00:00:00Z > build/results/assessment.json || test "$?" -eq 1
+          python -c 'import json; d=json.load(open("build/results/assessment.json")); assert d["status"]=="needs-review"; assert any(x["code"]=="fallback-risk" for x in d["findings"])'
+      - name: Render IETF XML without network references
+        run: |
+          python -m tools.render_draft --check
+          xml2rfc --no-network --text draft/draft-acosta-crypto-agility-manifest-02.xml --out build/results/draft-acosta-crypto-agility-manifest-02.txt
+          cmp build/results/draft-acosta-crypto-agility-manifest-02.txt draft/draft-acosta-crypto-agility-manifest-02.txt
+          xml2rfc --no-network --html draft/draft-acosta-crypto-agility-manifest-02.xml --out build/results/draft-acosta-crypto-agility-manifest-02.html
+          node_modules/.bin/idnits --mode submission --offline --output json draft/draft-acosta-crypto-agility-manifest-02.xml > build/results/idnits.json
+          python -c 'import json; d=json.load(open("build/results/idnits.json")); assert d["result"]=="pass" and not any(d["nitsBySeverity"].values())'
+      - name: Retain exact-commit validation evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: validation-${{ github.event.pull_request.head.sha || github.sha }}
+          path: build/results/
+          retention-days: 30

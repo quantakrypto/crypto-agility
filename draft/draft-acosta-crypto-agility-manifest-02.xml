@@ -1,0 +1,617 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rfc ipr="trust200902" category="info" submissionType="IETF" docName="draft-acosta-crypto-agility-manifest-02" version="3" consensus="false" tocInclude="true" sortRefs="true" symRefs="true">
+  <front>
+    <title abbrev="Crypto-Agility Manifest">A Well-Known Crypto-Agility Manifest</title>
+    <seriesInfo name="Internet-Draft" value="draft-acosta-crypto-agility-manifest-02" />
+    <author fullname="Leon Acosta" initials="L." surname="Acosta">
+      <organization>QuantaKrypto</organization>
+      <address>
+        <email>leon@quantakrypto.com</email>
+      </address>
+    </author>
+    <date year="2026" month="October" day="11" />
+    <abstract>
+      <t>This document defines a small JSON discovery manifest for cryptographic migration assessment. It distinguishes declarations, runtime observations and consumer verification, and separates key establishment from authentication. It covers heterogeneous endpoint profiles and evidence references. It does not define cryptographic negotiation, an attestation format, a scoring system, or authority to modify systems.</t>
+    </abstract>
+  </front>
+  <middle>
+    <section anchor="intro">
+      <name>Introduction</name>
+      <t>Cryptographic migration decisions need discoverable information about a specific system. A public manifest supplies declarations and evidence references; it cannot establish that every client, device or network path uses the declared algorithms. This individual proposal has no IETF consensus and does not claim universal post-quantum security.</t>
+      <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 <xref target="RFC2119" />
+        <xref target="RFC8174" /> when, and only when, they appear in all capitals, as shown here.</t>
+    </section>
+    <section anchor="discovery">
+      <name>Discovery and Versioning</name>
+      <t>A producer publishes the manifest at /.well-known/crypto-agility.json on an HTTPS origin, using application/json <xref target="RFC8615" />
+        <xref target="RFC9110" />. An origin is a scheme, host and port tuple <xref target="RFC6454" />. This profile uses port 443 and DNS hostnames. Consumers MUST authenticate the HTTPS server and MUST NOT follow redirects automatically. Publication by an origin establishes only who served the declaration.</t>
+      <t>The relying party MUST configure the expected subject independently. For subject.kind origin, subject.id MUST equal the configured HTTPS origin serialized under <xref target="RFC6454" />. Other kinds require an independently configured mapping from the discovery origin to the exact subject.id. Consumers MUST NOT infer authority over sibling hosts, repositories, fleets or deployment environments from a shared publisher.</t>
+      <t>Version 2 replaces, and is not an additive extension of, version 1. Both use the same discovery location. Producers serve one representation; consumers MUST reject unsupported versions rather than reinterpret their fields. A version 1 readiness score or hybridKex declaration MUST NOT be upgraded into a version 2 runtime observation. There is no downgrade or content-negotiation protocol in this document.</t>
+      <t>Producers SHOULD supply ETag or Last-Modified validators and Cache-Control. Consumers SHOULD use conditional GET under <xref target="RFC9110" /> and <xref target="RFC9111" />, honor no-store and revalidation directives, and impose a local maximum cache age. A 304 response reuses bytes but MUST NOT extend manifest, evidence or observation validity. HTTP errors and unavailable manifests yield unknown posture, never unsupported cryptography.</t>
+      <t>Optional external change feeds MAY trigger a bounded refresh of the configured discovery origin. This document defines no feed URL, event schema, signing scheme or hash chain. Notifications MUST NOT replace snapshot validation, authorize execution, or redirect evidence fetching. Polling with backoff remains a recovery mechanism.</t>
+    </section>
+    <section anchor="model">
+      <name>Data Model</name>
+      <t>The JSON object MUST conform to the schema in Appendix A, using JSON Schema 2020-12 <xref target="JSONSCHEMA" />
+        <xref target="JSONVALIDATION" />. Strings are case-sensitive. Unknown properties and duplicate JSON member names MUST be rejected. Producers MUST use UTF-8 <xref target="RFC8259" />. Documents MUST NOT exceed 1048576 octets or 16 nested containers. Each array has at most 256 entries, except profiles, which has at most 64; strings have at most 2048 Unicode code points unless the schema sets a stricter bound.</t>
+      <t>Timestamps use a restricted <xref target="RFC3339" /> form: uppercase T and Z, UTC, zero through six fractional-second digits, and no leap-second value. Consumers MUST validate calendar values and reject expiresAt less than or equal to generatedAt. They MUST NOT treat expired data as current. A local clock-skew allowance MAY be used; the reference consumer permits at most 300 seconds for future timestamps.</t>
+      <t>Every id MUST be unique within its collection. References in evidenceIds and profileIds MUST resolve within this manifest. Missing references, contradictory supported and unsupported values for one capability, and future observations MUST produce findings rather than a passing security decision.</t>
+      <t>The required version is the integer 2 and manifestType is crypto-agility. generatedAt identifies document generation and expiresAt its validity limit. Neither timestamp establishes when any endpoint was measured. subject contains required kind and id; optional environment and commit narrow descriptive context and do not prove deployed code.</t>
+      <t>observations is a required array, possibly empty. Each entry contains id, capability, value (supported, unsupported or unknown), method (declared, inferred or observed), observedAt and optional evidenceIds. For declared and inferred methods, observedAt is when the assertion was recorded. Capability names are descriptive identifiers; this document defines no global capability registry. Producers SHOULD use a protocol-specific registered algorithm identifier or an unambiguous implementation name where available.</t>
+      <t>evidence is an optional array. Each entry contains id, mediaType, digest and subjectId; uri is optional. subjectId MUST equal manifest subject.id. The digest object contains algorithm (sha-256, sha-384 or sha-512) and the exact lowercase hexadecimal value, respectively 64, 96 or 128 digits <xref target="RFC6234" />. Hashing covers the complete evidence bytes before parsing or reserialization; HTTP content codings, if used, are removed first. Consumers MUST verify the digest before interpreting evidence. A digest match establishes byte integrity relative to the declaration, not authenticity.</t>
+      <t>profiles is a nonempty array of declared endpoint capability classes. Each contains id, endpointRole (client, server, peer or gateway), deviceClass, protocol, keyEstablishment, authentication and fallback (deny-classical, allow-classical or unknown). Empty algorithm arrays mean unspecified inventory, not demonstrated absence of support. Optional constraints are human-readable limitations; evidenceIds link supporting evidence. The schema lists device classes including browsers, mobile devices, servers, IoT, embedded and industrial devices.</t>
+      <t>migration is a required array, possibly empty. Each entry contains id, usage and status. Status values are unknown, planned, blocked, in-progress, validated and deployed. Optional algorithm, target, deadline, profileIds, evidenceIds and blockers describe the plan. A producer claiming validated or deployed MUST supply evidenceIds; the consumer MUST independently verify relevant validation or deployment evidence before relying on that claim.</t>
+      <t>policies and exceptions are optional descriptive records, not remotely granted policy authority. Policy entries contain id, scope, source and optional effectiveAt. Exception entries contain findingId, reason, expiresAt and optional owner. Consumers MUST NOT use a manifest-supplied policy or exception to suppress a security finding without separate local authorization; expired or unowned exceptions are not valid enforcement exceptions.</t>
+    </section>
+    <section anchor="verification">
+      <name>Observations and Verification</name>
+      <t>Declared means an operator assertion. Inferred means a tool derived a conclusion, for example from a source scan. Observed means a runtime measurement was performed and requires at least one evidence reference. This producer-supplied label is not evidence verification. Independently verified is a consumer result and is deliberately not a manifest method value.</t>
+      <t>Before accepting observed evidence, consumers MUST verify subject, scope, acquisition time, freshness and provenance against locally configured policy. They MUST impose a maximum measurement age even when the manifest is still fresh. The reference consumer uses 86400 seconds by default. Stale, unavailable, incomplete or conflicting evidence cannot establish current protection.</t>
+      <t>Consumers that accept signed evidence MUST use an existing signature or attestation format with a documented application profile. They MUST constrain algorithms, verify signatures with independently configured issuer keys, and validate issuer authorization, audience, purpose, subject and validity. Replay handling MUST bind accepted statement identifiers or freshness checkpoints to the issuer and subject in protected durable state. Loss of that state requires explicit recovery; a newly issued wrapper MUST NOT refresh an old measurement. <xref target="RFC8725" /> describes relevant JWT validation requirements. No signature format or mandatory signature algorithm is introduced here.</t>
+      <t>A trusted signature authenticates what an issuer asserted, not the truth or completeness of that assertion. Independent verification requires a relying party to evaluate measurement evidence or repeat the measurement through a trusted process. A consumer MUST report which of signature authenticity, evidence integrity, measurement validity and independent corroboration it actually checked.</t>
+      <t>For TLS 1.3 <xref target="RFC8446" />, a claim of hybrid key establishment MUST identify the negotiated group from a completed authenticated connection. An offered group, cipher-suite name or self-reported capability is insufficient. Certificate-chain validation, reference-identity matching and handshake authentication MUST succeed. The probe configuration, endpoint identity, time and group MUST be bound to the evidence. Authentication algorithms MUST be assessed separately: hybrid key establishment does not make an RSA or ECDSA certificate post-quantum secure.</t>
+      <t>A classical-only negotiation MUST be reported as classical. Testing a classical-only peer distinguishes permitted fallback from a deny-classical policy; it does not prove resistance to every active downgrade attack. Implementations MUST rely on protocol-native authenticated negotiation and MUST NOT construct hybrid cryptography from manifest fields.</t>
+      <t>The reference implementation accepts Ed25519 or ML-DSA-65 signatures under an explicit local key-algorithm policy. ML-DSA-65 JWS uses <xref target="RFC9964" /> with an empty context and pure ML-DSA, not HashML-DSA. Its public-key import follows <xref target="RFC9881" />. An existing signing authority can issue this standard envelope without moving its private key. Successful signature verification does not verify the signed measurement.</t>
+    </section>
+    <section anchor="compatibility">
+      <name>Compatibility and Monitoring</name>
+      <t>Compatibility from profile intersection is only declared compatibility. A consumer MUST NOT infer interoperability from deviceClass alone. Empty inventories, unresolved firmware or resource constraints and untested authentication trust yield unknown. A definite protocol mismatch or absence of common declared algorithms can be reported as a declared mismatch. Real interoperability requires measurements on each relevant software, firmware and trust-store combination.</t>
+      <t>A gateway that terminates TLS creates separate hops. A successful browser-to-gateway test MUST NOT establish gateway-to-device protection. Offline or constrained devices SHOULD be represented through an authenticated fleet gateway with explicit connectivity constraints; missing telemetry is unknown. This document supplies no device enrollment protocol and no guarantee of inventory coverage.</t>
+      <t>Monitors SHOULD detect expired evidence, changed algorithms, classical fallback, missing profiles and invalid snapshots. They SHOULD preserve the last valid baseline when new input fails, distinguish failure from recovery, and emit actionable, deduplicated local alerts. State MUST be scoped to the subject and protected against unauthorized modification and rollback to the extent provided by the local platform. A manifest does not authorize a monitor to change firmware, keys, software or network policy.</t>
+    </section>
+    <section anchor="security">
+      <name>Security and Privacy Considerations</name>
+      <t>All public content is untrusted, including signed content from a compromised issuer. Consumers MUST bound retrieval time, response bytes, parsing, evidence size and retries, and defend against server-side request forgery, DNS rebinding and unsafe redirects. Network destinations MUST be independently authorized. Public discovery MUST NOT automatically fetch private addresses, local file references or issuer-supplied keys. Locally provisioned evidence directories MAY be used by offline tools with path confinement.</t>
+      <t>URLs, descriptive strings and constraints MUST NOT be executed or interpreted as instructions. Public manifests SHOULD omit secrets, internal hostnames, device identifiers and detailed vulnerability inventories. Producers should assess the privacy impact of exposing migration gaps and change cadence. Consumers MUST NOT equate scores, declarations, signatures or successful sample measurements with comprehensive security or regulatory compliance.</t>
+    </section>
+    <section anchor="iana">
+      <name>IANA Considerations</name>
+      <t>This document proposes provisional registration of the following well-known URI under <xref target="RFC8615" />. Registration is requested, not assumed to have been approved.</t>
+      <t>URI suffix: crypto-agility.json. Change controller: Leon Acosta (leon@quantakrypto.com). Specification document: this document, Sections 2 and 3. Status: provisional. Related information: HTTPS on port 443, DNS hostnames, application/json. No additional path components, query parameters or fragment identifiers are defined.</t>
+    </section>
+  </middle>
+  <back>
+    <references>
+      <name>Normative References</name>
+      <reference anchor="RFC2119" target="https://www.rfc-editor.org/info/rfc2119">
+        <front>
+          <title>Key words for use in RFCs to Indicate Requirement Levels</title>
+          <author fullname="S. Bradner" />
+          <date year="1997" />
+        </front>
+        <seriesInfo name="RFC" value="2119" />
+        <seriesInfo name="DOI" value="10.17487/RFC2119" />
+      </reference>
+      <reference anchor="RFC8174" target="https://www.rfc-editor.org/info/rfc8174">
+        <front>
+          <title>Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words</title>
+          <author fullname="B. Leiba" />
+          <date year="2017" />
+        </front>
+        <seriesInfo name="RFC" value="8174" />
+        <seriesInfo name="DOI" value="10.17487/RFC8174" />
+      </reference>
+      <reference anchor="RFC8259" target="https://www.rfc-editor.org/info/rfc8259">
+        <front>
+          <title>The JavaScript Object Notation (JSON) Data Interchange Format</title>
+          <author fullname="T. Bray" />
+          <date year="2017" />
+        </front>
+        <seriesInfo name="RFC" value="8259" />
+        <seriesInfo name="DOI" value="10.17487/RFC8259" />
+      </reference>
+      <reference anchor="RFC3339" target="https://www.rfc-editor.org/info/rfc3339">
+        <front>
+          <title>Date and Time on the Internet: Timestamps</title>
+          <author fullname="G. Klyne and C. Newman" />
+          <date year="2002" />
+        </front>
+        <seriesInfo name="RFC" value="3339" />
+        <seriesInfo name="DOI" value="10.17487/RFC3339" />
+      </reference>
+      <reference anchor="RFC8615" target="https://www.rfc-editor.org/info/rfc8615">
+        <front>
+          <title>Well-Known Uniform Resource Identifiers (URIs)</title>
+          <author fullname="M. Nottingham" />
+          <date year="2019" />
+        </front>
+        <seriesInfo name="RFC" value="8615" />
+        <seriesInfo name="DOI" value="10.17487/RFC8615" />
+      </reference>
+      <reference anchor="RFC9110" target="https://www.rfc-editor.org/info/rfc9110">
+        <front>
+          <title>HTTP Semantics</title>
+          <author fullname="R. Fielding, M. Nottingham and J. Reschke" />
+          <date year="2022" />
+        </front>
+        <seriesInfo name="RFC" value="9110" />
+        <seriesInfo name="DOI" value="10.17487/RFC9110" />
+      </reference>
+      <reference anchor="RFC9111" target="https://www.rfc-editor.org/info/rfc9111">
+        <front>
+          <title>HTTP Caching</title>
+          <author fullname="R. Fielding, M. Nottingham and J. Reschke" />
+          <date year="2022" />
+        </front>
+        <seriesInfo name="RFC" value="9111" />
+        <seriesInfo name="DOI" value="10.17487/RFC9111" />
+      </reference>
+      <reference anchor="RFC6454" target="https://www.rfc-editor.org/info/rfc6454">
+        <front>
+          <title>The Web Origin Concept</title>
+          <author fullname="A. Barth" />
+          <date year="2011" />
+        </front>
+        <seriesInfo name="RFC" value="6454" />
+        <seriesInfo name="DOI" value="10.17487/RFC6454" />
+      </reference>
+      <reference anchor="RFC6234" target="https://www.rfc-editor.org/info/rfc6234">
+        <front>
+          <title>US Secure Hash Algorithms (SHA and SHA-based HMAC and HKDF)</title>
+          <author fullname="D. Eastlake 3rd and T. Hansen" />
+          <date year="2011" />
+        </front>
+        <seriesInfo name="RFC" value="6234" />
+        <seriesInfo name="DOI" value="10.17487/RFC6234" />
+      </reference>
+      <reference anchor="JSONSCHEMA" target="https://json-schema.org/draft/2020-12/json-schema-core">
+        <front>
+          <title>JSON Schema: A Media Type for Describing JSON Documents</title>
+          <author>
+            <organization>JSON Schema</organization>
+          </author>
+          <date year="2022" month="June" />
+        </front>
+        <refcontent>2020-12, work in progress</refcontent>
+      </reference>
+      <reference anchor="JSONVALIDATION" target="https://json-schema.org/draft/2020-12/json-schema-validation">
+        <front>
+          <title>JSON Schema Validation: A Vocabulary for Structural Validation of JSON</title>
+          <author>
+            <organization>JSON Schema</organization>
+          </author>
+          <date year="2022" month="June" />
+        </front>
+        <refcontent>2020-12, work in progress</refcontent>
+      </reference>
+    </references>
+    <references>
+      <name>Informative References</name>
+      <reference anchor="RFC8446" target="https://www.rfc-editor.org/info/rfc8446">
+        <front>
+          <title>The Transport Layer Security (TLS) Protocol Version 1.3</title>
+          <author fullname="E. Rescorla" />
+          <date year="2018" />
+        </front>
+        <seriesInfo name="RFC" value="8446" />
+      </reference>
+      <reference anchor="RFC8725" target="https://www.rfc-editor.org/info/rfc8725">
+        <front>
+          <title>JSON Web Token Best Current Practices</title>
+          <author fullname="Y. Sheffer, D. Hardt and M. Jones" />
+          <date year="2020" />
+        </front>
+        <seriesInfo name="RFC" value="8725" />
+      </reference>
+      <reference anchor="RFC9964" target="https://www.rfc-editor.org/info/rfc9964">
+        <front>
+          <title>ML-DSA for JSON Object Signing and Encryption (JOSE) and CBOR Object Signing and Encryption (COSE)</title>
+          <author fullname="M. Prorock and O. Steele" />
+          <date year="2026" month="May" />
+        </front>
+        <seriesInfo name="RFC" value="9964" />
+        <seriesInfo name="DOI" value="10.17487/RFC9964" />
+      </reference>
+      <reference anchor="RFC9881" target="https://www.rfc-editor.org/info/rfc9881">
+        <front>
+          <title>Internet X.509 Public Key Infrastructure -- Algorithm Identifiers for the Module-Lattice-Based Digital Signature Algorithm (ML-DSA)</title>
+          <author fullname="J. Massimo, P. Kampanakis, S. Turner and B. E. Westerbaan" />
+          <date year="2025" month="October" />
+        </front>
+        <seriesInfo name="RFC" value="9881" />
+        <seriesInfo name="DOI" value="10.17487/RFC9881" />
+      </reference>
+    </references>
+    <section anchor="schema">
+      <name>JSON Schema</name>
+      <t>This schema is normative. Cross-reference resolution, time ordering, uniqueness of record identifiers, subject binding and evidence verification also require the semantic checks specified above. The schema is bundled; validators MUST NOT fetch schemas selected by an untrusted manifest.</t>
+      <sourcecode type="json" name="crypto-agility-v2.schema.json">{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Crypto-Agility Manifest version 2",
+  "type":"object",
+  "additionalProperties":false,
+  "required":
+  [
+    "version",
+    "manifestType",
+    "generatedAt",
+    "expiresAt",
+    "subject",
+    "observations",
+    "migration",
+    "profiles"
+  ],
+  "properties":
+  {
+    "version":{"const":2},
+    "manifestType":{"const":"crypto-agility"},
+    "generatedAt":
+    {
+      "type":"string",
+      "format":"date-time",
+      "minLength":1,
+      "maxLength":2048,
+      "pattern":
+"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+    },
+    "expiresAt":
+    {
+      "type":"string",
+      "format":"date-time",
+      "minLength":1,
+      "maxLength":2048,
+      "pattern":
+"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+    },
+    "subject":
+    {
+      "type":"object",
+      "additionalProperties":false,
+      "required":["kind","id"],
+      "properties":
+      {
+        "kind":
+        {
+          "enum":
+          [
+            "origin",
+            "service",
+            "repository",
+            "artifact",
+            "device-fleet"
+          ]
+        },
+        "id":{"type":"string","minLength":1,"maxLength":2048},
+        "environment":
+        {"type":"string","minLength":1,"maxLength":2048},
+        "commit":{"type":"string","minLength":1,"maxLength":2048}
+      }
+    },
+    "observations":
+    {
+      "type":"array",
+      "items":
+      {
+        "type":"object",
+        "additionalProperties":false,
+        "required":["id","capability","value","method","observedAt"],
+        "properties":
+        {
+          "id":{"type":"string","minLength":1,"maxLength":2048},
+          "capability":
+          {"type":"string","minLength":1,"maxLength":2048},
+          "value":{"enum":["supported","unsupported","unknown"]},
+          "method":{"enum":["observed","inferred","declared"]},
+          "observedAt":
+          {
+            "type":"string",
+            "format":"date-time",
+            "minLength":1,
+            "maxLength":2048,
+            "pattern":
+"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+          },
+          "evidenceIds":
+          {
+            "type":"array",
+            "items":{"type":"string","minLength":1,"maxLength":2048},
+            "maxItems":256,
+            "uniqueItems":true
+          }
+        }
+      },
+      "maxItems":256
+    },
+    "evidence":
+    {
+      "type":"array",
+      "items":
+      {
+        "type":"object",
+        "additionalProperties":false,
+        "required":["id","mediaType","digest","subjectId"],
+        "properties":
+        {
+          "id":{"type":"string","minLength":1,"maxLength":2048},
+          "uri":
+          {
+            "type":"string",
+            "format":"uri",
+            "minLength":1,
+            "maxLength":2048
+          },
+          "mediaType":
+          {"type":"string","minLength":1,"maxLength":2048},
+          "digest":
+          {
+            "type":"object",
+            "additionalProperties":false,
+            "required":["algorithm","value"],
+            "properties":
+            {
+              "algorithm":{"enum":["sha-256","sha-384","sha-512"]},
+              "value":
+              {
+                "type":"string",
+                "pattern":"^[0-9a-f]+$",
+                "minLength":1,
+                "maxLength":2048
+              }
+            },
+            "allOf":
+            [
+              {
+                "if":
+                {"properties":{"algorithm":{"const":"sha-256"}}},
+                "then":
+                {
+                  "properties":
+                  {"value":{"minLength":64,"maxLength":64}}
+                }
+              },
+              {
+                "if":
+                {"properties":{"algorithm":{"const":"sha-384"}}},
+                "then":
+                {
+                  "properties":
+                  {"value":{"minLength":96,"maxLength":96}}
+                }
+              },
+              {
+                "if":
+                {"properties":{"algorithm":{"const":"sha-512"}}},
+                "then":
+                {
+                  "properties":
+                  {"value":{"minLength":128,"maxLength":128}}
+                }
+              }
+            ]
+          },
+          "subjectId":
+          {"type":"string","minLength":1,"maxLength":2048}
+        }
+      },
+      "maxItems":256
+    },
+    "migration":
+    {
+      "type":"array",
+      "items":
+      {
+        "type":"object",
+        "additionalProperties":false,
+        "required":["id","usage","status"],
+        "properties":
+        {
+          "id":{"type":"string","minLength":1,"maxLength":2048},
+          "usage":
+          {
+            "enum":
+            [
+              "key-establishment",
+              "authentication",
+              "signature",
+              "encryption",
+              "other"
+            ]
+          },
+          "algorithm":
+          {"type":"string","minLength":1,"maxLength":2048},
+          "target":{"type":"string","minLength":1,"maxLength":2048},
+          "status":
+          {
+            "enum":
+            [
+              "unknown",
+              "planned",
+              "blocked",
+              "in-progress",
+              "validated",
+              "deployed"
+            ]
+          },
+          "deadline":
+          {
+            "type":"string",
+            "format":"date-time",
+            "minLength":1,
+            "maxLength":2048,
+            "pattern":
+"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+          },
+          "profileIds":
+          {
+            "type":"array",
+            "items":{"type":"string","minLength":1,"maxLength":2048},
+            "maxItems":256,
+            "uniqueItems":true
+          },
+          "evidenceIds":
+          {
+            "type":"array",
+            "items":{"type":"string","minLength":1,"maxLength":2048},
+            "maxItems":256,
+            "uniqueItems":true
+          },
+          "blockers":
+          {
+            "type":"array",
+            "items":{"type":"string","minLength":1,"maxLength":2048},
+            "maxItems":256
+          }
+        }
+      },
+      "maxItems":256
+    },
+    "profiles":
+    {
+      "type":"array",
+      "minItems":1,
+      "items":
+      {
+        "type":"object",
+        "additionalProperties":false,
+        "required":
+        [
+          "id",
+          "endpointRole",
+          "deviceClass",
+          "protocol",
+          "keyEstablishment",
+          "authentication",
+          "fallback"
+        ],
+        "properties":
+        {
+          "id":{"type":"string","minLength":1,"maxLength":2048},
+          "endpointRole":
+          {"enum":["client","server","peer","gateway"]},
+          "deviceClass":
+          {
+            "enum":
+            [
+              "browser",
+              "mobile",
+              "desktop",
+              "server",
+              "iot",
+              "embedded",
+              "industrial",
+              "network",
+              "other"
+            ]
+          },
+          "protocol":
+          {"type":"string","minLength":1,"maxLength":2048},
+          "keyEstablishment":
+          {
+            "type":"array",
+            "items":{"type":"string","minLength":1,"maxLength":2048},
+            "maxItems":256,
+            "uniqueItems":true
+          },
+          "authentication":
+          {
+            "type":"array",
+            "items":{"type":"string","minLength":1,"maxLength":2048},
+            "maxItems":256,
+            "uniqueItems":true
+          },
+          "fallback":
+          {"enum":["deny-classical","allow-classical","unknown"]},
+          "constraints":
+          {
+            "type":"array",
+            "items":{"type":"string","minLength":1,"maxLength":2048},
+            "maxItems":256
+          },
+          "evidenceIds":
+          {
+            "type":"array",
+            "items":{"type":"string","minLength":1,"maxLength":2048},
+            "maxItems":256,
+            "uniqueItems":true
+          }
+        }
+      },
+      "maxItems":64
+    },
+    "policies":
+    {
+      "type":"array",
+      "items":
+      {
+        "type":"object",
+        "required":["id","scope","source"],
+        "properties":
+        {
+          "id":{"type":"string","minLength":1,"maxLength":2048},
+          "scope":{"type":"string","minLength":1,"maxLength":2048},
+          "source":{"type":"string","minLength":1,"maxLength":2048},
+          "effectiveAt":
+          {
+            "type":"string",
+            "format":"date-time",
+            "minLength":1,
+            "maxLength":2048,
+            "pattern":
+"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+          }
+        },
+        "additionalProperties":false
+      },
+      "maxItems":256
+    },
+    "exceptions":
+    {
+      "type":"array",
+      "items":
+      {
+        "type":"object",
+        "required":["findingId","reason","expiresAt"],
+        "properties":
+        {
+          "findingId":
+          {"type":"string","minLength":1,"maxLength":2048},
+          "reason":{"type":"string","minLength":1,"maxLength":2048},
+          "owner":{"type":"string","minLength":1,"maxLength":2048},
+          "expiresAt":
+          {
+            "type":"string",
+            "format":"date-time",
+            "minLength":1,
+            "maxLength":2048,
+            "pattern":
+"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d{1,6})?Z$"
+          }
+        },
+        "additionalProperties":false
+      },
+      "maxItems":256
+    }
+  },
+  "$id":
+  "https://quantakrypto.com/schema/crypto-agility-v2.schema.json"
+}</sourcecode>
+    </section>
+    <section anchor="example">
+      <name>Minimal Example</name>
+      <t>This example has no runtime measurements. Its profile is a declaration, not demonstrated compatibility or security.</t>
+      <sourcecode type="json" name="minimal-v2.json">{
+  "version": 2,
+  "manifestType": "crypto-agility",
+  "generatedAt": "2026-10-11T10:00:00Z",
+  "expiresAt": "2026-10-12T10:00:00Z",
+  "subject": {
+    "kind": "origin",
+    "id": "https://example.org"
+  },
+  "observations": [],
+  "migration": [],
+  "profiles": [
+    {
+      "id": "service",
+      "endpointRole": "server",
+      "deviceClass": "server",
+      "protocol": "TLS 1.3",
+      "keyEstablishment": [],
+      "authentication": [],
+      "fallback": "unknown"
+    }
+  ]
+}</sourcecode>
+    </section>
+  </back>
+</rfc>

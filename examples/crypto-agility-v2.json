@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "manifestType": "crypto-agility",
+  "generatedAt": "2026-10-11T10:00:00Z",
+  "expiresAt": "2026-10-18T10:00:00Z",
+  "subject": {
+    "kind": "service",
+    "id": "https://example.org",
+    "environment": "production"
+  },
+  "observations": [
+    {
+      "id": "obs-tls-01",
+      "capability": "TLS hybrid key establishment",
+      "value": "supported",
+      "method": "declared",
+      "observedAt": "2026-10-11T09:00:00Z",
+      "evidenceIds": []
+    }
+  ],
+  "evidence": [],
+  "migration": [
+    {
+      "id": "mig-auth-01",
+      "usage": "authentication",
+      "algorithm": "ECDSA",
+      "target": "PQC-capable authentication",
+      "status": "blocked",
+      "profileIds": [
+        "modern-browser",
+        "legacy-sensor"
+      ],
+      "blockers": [
+        "legacy-sensor firmware lacks PQC verification"
+      ]
+    }
+  ],
+  "profiles": [
+    {
+      "id": "modern-browser",
+      "endpointRole": "client",
+      "deviceClass": "browser",
+      "protocol": "TLS 1.3",
+      "keyEstablishment": [
+        "X25519MLKEM768"
+      ],
+      "authentication": [
+        "ECDSA"
+      ],
+      "fallback": "allow-classical",
+      "constraints": []
+    },
+    {
+      "id": "legacy-sensor",
+      "endpointRole": "client",
+      "deviceClass": "iot",
+      "protocol": "TLS 1.3",
+      "keyEstablishment": [
+        "X25519"
+      ],
+      "authentication": [
+        "ECDSA"
+      ],
+      "fallback": "unknown",
+      "constraints": [
+        "firmware update required"
+      ]
+    }
+  ],
+  "policies": [],
+  "exceptions": []
+}

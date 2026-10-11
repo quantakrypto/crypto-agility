@@ -1,0 +1,4 @@
+jsonschema[format]==4.26.0
+cryptography==46.0.7
+PyJWT==2.15.1
+xml2rfc==3.34.1
