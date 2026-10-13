@@ -115,6 +115,7 @@ class LiveTLSTests(unittest.TestCase):
         from tools.observatory_ingestion import ingest_measurement
         result = self.run_connection('X25519', ['X25519'])
         self.assertEqual(result['status'], 'verified-connection')
+        self.assertRegex(result['evidence']['observedAt'], r'^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-5][0-9]Z$')
         subject = 'https://localhost:' + str(result['port'])
         key = Ed25519PrivateKey.generate()
         public = key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)

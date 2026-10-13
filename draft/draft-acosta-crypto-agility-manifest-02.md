@@ -1,6 +1,6 @@
 # A Well-Known Crypto-Agility Manifest
 
-`draft-acosta-crypto-agility-manifest-02` | individual Informational proposal | not submitted
+`draft-acosta-crypto-agility-manifest-02` | individual Informational proposal | [publication status](https://datatracker.ietf.org/doc/draft-acosta-crypto-agility-manifest/)
 
 Author: Leon Acosta, QuantaKrypto, leon@quantakrypto.com
 
@@ -24,7 +24,7 @@ A producer publishes the manifest at /.well-known/crypto-agility.json on an HTTP
 
 The relying party MUST configure the expected subject independently. For subject.kind origin, subject.id MUST equal the configured HTTPS origin serialized under [RFC6454]. Other kinds require an independently configured mapping from the discovery origin to the exact subject.id. Consumers MUST NOT infer authority over sibling hosts, repositories, fleets or deployment environments from a shared publisher.
 
-Version 2 replaces, and is not an additive extension of, version 1. Both use the same discovery location. Producers serve one representation; consumers MUST reject unsupported versions rather than reinterpret their fields. A version 1 readiness score or hybridKex declaration MUST NOT be upgraded into a version 2 runtime observation. There is no downgrade or content-negotiation protocol in this document.
+The contract identifier is the JSON integer version value 2. Producers serve one representation at the discovery location; consumers MUST reject unsupported versions rather than reinterpret their fields. Any adapter for a separately supported source format MUST retain its evidence provenance and MUST NOT promote a source declaration or score into a runtime observation. There is no downgrade or content-negotiation protocol in this document.
 
 Producers SHOULD supply ETag or Last-Modified validators and Cache-Control. Consumers SHOULD use conditional GET under [RFC9110] and [RFC9111], honor no-store and revalidation directives, and impose a local maximum cache age. A 304 response reuses bytes but MUST NOT extend manifest, evidence or observation validity. HTTP errors and unavailable manifests yield unknown posture, never unsupported cryptography.
 

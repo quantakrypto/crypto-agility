@@ -9,7 +9,7 @@
         <email>leon@quantakrypto.com</email>
       </address>
     </author>
-    <date year="2026" month="October" day="11" />
+    <date year="2026" month="October" day="13" />
     <abstract>
       <t>This document defines a small JSON discovery manifest for cryptographic migration assessment. It distinguishes declarations, runtime observations and consumer verification, and separates key establishment from authentication. It covers heterogeneous endpoint profiles and evidence references. It does not define cryptographic negotiation, an attestation format, a scoring system, or authority to modify systems.</t>
     </abstract>
@@ -26,7 +26,7 @@
       <t>A producer publishes the manifest at /.well-known/crypto-agility.json on an HTTPS origin, using application/json <xref target="RFC8615" />
         <xref target="RFC9110" />. An origin is a scheme, host and port tuple <xref target="RFC6454" />. This profile uses port 443 and DNS hostnames. Consumers MUST authenticate the HTTPS server and MUST NOT follow redirects automatically. Publication by an origin establishes only who served the declaration.</t>
       <t>The relying party MUST configure the expected subject independently. For subject.kind origin, subject.id MUST equal the configured HTTPS origin serialized under <xref target="RFC6454" />. Other kinds require an independently configured mapping from the discovery origin to the exact subject.id. Consumers MUST NOT infer authority over sibling hosts, repositories, fleets or deployment environments from a shared publisher.</t>
-      <t>Version 2 replaces, and is not an additive extension of, version 1. Both use the same discovery location. Producers serve one representation; consumers MUST reject unsupported versions rather than reinterpret their fields. A version 1 readiness score or hybridKex declaration MUST NOT be upgraded into a version 2 runtime observation. There is no downgrade or content-negotiation protocol in this document.</t>
+      <t>The contract identifier is the JSON integer version value 2. Producers serve one representation at the discovery location; consumers MUST reject unsupported versions rather than reinterpret their fields. Any adapter for a separately supported source format MUST retain its evidence provenance and MUST NOT promote a source declaration or score into a runtime observation. There is no downgrade or content-negotiation protocol in this document.</t>
       <t>Producers SHOULD supply ETag or Last-Modified validators and Cache-Control. Consumers SHOULD use conditional GET under <xref target="RFC9110" /> and <xref target="RFC9111" />, honor no-store and revalidation directives, and impose a local maximum cache age. A 304 response reuses bytes but MUST NOT extend manifest, evidence or observation validity. HTTP errors and unavailable manifests yield unknown posture, never unsupported cryptography.</t>
       <t>Optional external change feeds MAY trigger a bounded refresh of the configured discovery origin. This document defines no feed URL, event schema, signing scheme or hash chain. Notifications MUST NOT replace snapshot validation, authorize execution, or redirect evidence fetching. Polling with backoff remains a recovery mechanism.</t>
     </section>

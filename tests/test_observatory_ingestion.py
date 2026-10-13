@@ -25,7 +25,7 @@ class IngestionTests(unittest.TestCase):
                       'subjects': ['https://example.org'], 'audiences': ['monitor'], 'purposes': ['pqc-observation']}}}
         self.claims = {'iss': 'observatory', 'sub': 'https://example.org', 'aud': 'monitor', 'jti': 'measurement-1',
                        'purpose': 'pqc-observation', 'iat': int(NOW.timestamp()), 'exp': int(NOW.timestamp())+3600,
-                       'observation': {'profile': 'openssl-tls13-v1', 'observedAt': NOW.isoformat(timespec='seconds'),
+                       'observation': {'profile': 'openssl-tls13-v1', 'observedAt': NOW.isoformat(timespec='seconds').replace('+00:00', 'Z'),
                        'endpoint': {'host': 'example.org', 'port': 443, 'address': '192.0.2.1'},
                        'probe': {'name': 'openssl', 'version': 'OpenSSL 3.5.0', 'groups': ['X25519MLKEM768', 'X25519'],
                                  'certificateValidation': 'pkix-hostname', 'exitCode': 0},
@@ -58,6 +58,19 @@ class IngestionTests(unittest.TestCase):
                 claims['jti'] = str(i)
                 claims['observation'][field] = value
                 self.assertFalse(self.ingest(claims)['accepted'])
+
+    def test_signed_measurement_requires_whole_second_utc_profile(self):
+        malformed = ('2026-10-12T00:00:00+00:00', '2026-10-12T01:00:00+01:00',
+                     '2026-10-12T00:00:00.000Z', '2026-10-12T00:00:00',
+                     '2026-10-12 00:00:00Z', '2026-10-12T00:00:60Z',
+                     '2026-02-30T00:00:00Z', 1791763200)
+        for i, value in enumerate(malformed):
+            with self.subTest(value=value):
+                claims = copy.deepcopy(self.claims)
+                claims['jti'] = 'timestamp-' + str(i)
+                claims['observation']['observedAt'] = value
+                self.assertEqual(self.ingest(claims), {'accepted': False, 'reason': 'invalid-measurement'})
+                self.assertEqual(self.ingest(claims)['reason'], 'replay')
 
     def test_rejects_nonvalidated_and_failed_probes(self):
         for i, (field, value) in enumerate([('exitCode', 1), ('exitCode', False), ('certificateValidation', 'disabled'), ('groups', ['X25519'])]):
