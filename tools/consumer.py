@@ -90,13 +90,6 @@ def _config(path, now):
             raise ValueError('invalid consumer identity')
     if _origin(config['subject']) != config['subject']:
         raise ValueError('canonical origin subject required')
-    status = config['keyStatus']
-    if not isinstance(status, dict) or set(status) != {'status', 'checkedAt', 'validUntil', 'source'}:
-        raise ValueError('explicit operator key status required')
-    checked, until = parse_time(status['checkedAt']), parse_time(status['validUntil'])
-    if (status['status'] != 'active' or not checked <= now < until or (until-checked).total_seconds() > 86400
-            or not isinstance(status['source'], str) or not 1 <= len(status['source'].strip()) <= 2048):
-        raise ValueError('operator key status absent, inactive, future, expired or unbounded')
     trust = config['trust']
     if not isinstance(trust, dict) or set(trust) != {'issuers'} or set(trust['issuers']) != {config['issuer']}:
         raise ValueError('exact issuer trust required')
@@ -106,6 +99,17 @@ def _config(path, now):
             or policy.get('purposes') != ['pqc-observation'] or policy.get('disabled', False) is not False
             or config['keyId'] in policy.get('revokedKeys', [])):
         raise ValueError('exact enabled key and consumer scopes required')
+    status = config['keyStatus']
+    if isinstance(status, dict) and status.get('mode') == 'aws-kms':
+        from tools.kms_status import validate_status
+        config['_kmsCheckedAt'] = validate_status(status, policy['keys'][config['keyId']], now)
+    else:
+        if not isinstance(status, dict) or set(status) != {'status', 'checkedAt', 'validUntil', 'source'}:
+            raise ValueError('explicit operator key status required')
+        checked, until = parse_time(status['checkedAt']), parse_time(status['validUntil'])
+        if (status['status'] != 'active' or not checked <= now < until or (until-checked).total_seconds() > 86400
+                or not isinstance(status['source'], str) or not 1 <= len(status['source'].strip()) <= 2048):
+            raise ValueError('operator key status absent, inactive, future, expired or unbounded')
     return config
 
 
@@ -153,8 +157,8 @@ def _check_state(directory):
         # Missing or unsafe files cannot trigger implicit baseline/replay reset.
         for name in ('state.json', 'replay.json', 'clock.json'):
             value = load_manifest(_read(fd, name, 4 * 1024 * 1024))
-            if name == 'clock.json' and (set(value) != {'lastNow'} or type(value['lastNow']) not in (int, float)
-                                         or not math.isfinite(value['lastNow'])):
+            if name == 'clock.json' and (not {'lastNow'} <= set(value) <= {'lastNow', 'lastKmsCheck', 'lastKmsUnavailable'}
+                                         or any(type(n) not in (int, float) or not math.isfinite(n) for n in value.values())):
                 raise ValueError('invalid consumer clock state')
 
 
@@ -163,6 +167,17 @@ class Consumer:
         self.config_path, self.bundles, self.directory = map(Path, (config, bundles, state_directory))
         self.schema = json.loads((ROOT/'schema/crypto-agility-v2.schema.json').read_bytes())
         self.cache = {}
+
+    def _record_kms_check(self, checked_at, *, unavailable=False):
+        with locked_document(self.directory/'clock.json', require_existing=True) as (clock, save):
+            if checked_at < clock.get('lastKmsCheck', 0):
+                raise ValueError('KMS status rollback')
+            if not unavailable and checked_at <= clock.get('lastKmsUnavailable', -1):
+                raise ValueError('newer KMS check required after unavailable status')
+            if unavailable:
+                clock['lastKmsUnavailable'] = checked_at
+            clock['lastKmsCheck'] = checked_at
+            save(clock)
 
     def check(self, now=None):
         now = now or dt.datetime.now(dt.timezone.utc)
@@ -173,8 +188,16 @@ class Consumer:
             with locked_document(self.directory/'clock.json', require_existing=True) as (clock, save):
                 if now.tzinfo is None or (clock and now.timestamp() < clock['lastNow']):
                     raise ValueError('consumer clock rollback')
-                save({'lastNow': now.timestamp()})
-            config = _config(self.config_path, now)
+                clock['lastNow'] = now.timestamp()
+                save(clock)
+            from tools.kms_status import KmsStatusUnavailable
+            try:
+                config = _config(self.config_path, now)
+            except KmsStatusUnavailable as unavailable:
+                self._record_kms_check(unavailable.checked_at, unavailable=True)
+                raise
+            if '_kmsCheckedAt' in config:
+                self._record_kms_check(config['_kmsCheckedAt'])
             values = _bundle(self.bundles)
             manifest = load_manifest(values['manifest.json'])
             if manifest.get('subject', {}).get('kind') != 'origin' or manifest['subject'].get('id') != config['subject']:
