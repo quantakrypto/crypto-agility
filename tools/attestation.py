@@ -74,14 +74,15 @@ class ReplayStore:
     Fresh IDs do not permit an older issuance time to replace a newer statement
     for the same issuer/subject/audience/purpose. A clock rollback fails closed.
     """
-    def __init__(self, path, max_entries=10000):
+    def __init__(self, path, max_entries=10000, *, require_existing=False):
         self.path = Path(path)
         self.max_entries = max_entries
+        self.require_existing = require_existing
 
     def consume(self, claims, now):
         identity = hashlib.sha256(canonical([claims[k] for k in ("iss", "aud", "jti")])).hexdigest()
         scope = hashlib.sha256(canonical([claims[k] for k in ("iss", "sub", "aud", "purpose")])).hexdigest()
-        with locked_document(self.path) as (previous, save):
+        with locked_document(self.path, require_existing=self.require_existing) as (previous, save):
             state = previous if previous is not None else {"version": 1, "lastNow": now, "entries": {}, "latest": {}}
             if (state.get("version") != 1 or not isinstance(state.get("entries"), dict)
                     or not isinstance(state.get("latest"), dict)):

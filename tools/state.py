@@ -35,7 +35,7 @@ def _owned_regular(fd):
 
 
 @contextlib.contextmanager
-def locked_document(path):
+def locked_document(path, *, require_existing=False):
     """Yield (previous, save), holding a separate lock across read/replace/fsync."""
     path = Path(path).absolute()
     directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
@@ -57,6 +57,8 @@ def locked_document(path):
         try:
             fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
         except FileNotFoundError:
+            if require_existing:
+                raise ValueError("initialized state file is missing")
             previous = None
         else:
             with os.fdopen(fd, "rb") as source:
@@ -152,12 +154,12 @@ def _time(value):
     return parsed
 
 
-def update_state(path, report):
+def update_state(path, report, *, require_existing=False):
     if not isinstance(report.get("subject"), str) or not report["subject"]:
         raise ValueError("state subject required")
     if report.get("assessment", {}).get("status") == "invalid":
         raise ValueError("invalid assessments cannot replace monitoring state")
-    with locked_document(path) as (previous, save):
+    with locked_document(path, require_existing=require_existing) as (previous, save):
         if previous is not None and not previous.get("noBaseline", False):
             if previous.get("subject") != report["subject"]:
                 raise ValueError("state subject mismatch")
@@ -203,9 +205,9 @@ def acknowledge_alerts(path, delivery_ids):
         return len(pending) - len(remaining)
 
 
-def enqueue_failure(path, alert):
+def enqueue_failure(path, alert, *, require_existing=False):
     """Durably queue an input failure without advancing a successful baseline."""
-    with locked_document(path) as (previous, save):
+    with locked_document(path, require_existing=require_existing) as (previous, save):
         state = previous if previous is not None else {"noBaseline": True}
         pending = {a["id"]: a for a in state.get("pendingAlerts", [])}
         if alert["id"] not in pending:

@@ -76,28 +76,39 @@ def _bounded_read(path, limit=1048576):
 
 
 def run_once(manifest_path, schema, state_path=None, now=None, *, evidence=None,
-             measurement_cache=None, discovery=None, origin=None, expected_subject=None):
+             measurement_cache=None, discovery=None, origin=None, expected_subject=None, input_bytes=None, require_existing_state=False):
     """Read/refresh, authenticate, assess and atomically record one check.
 
     evidence contains token/transcript/trust paths, audience and ReplayStore.
     A process-local cache reuses only identical authenticated input bytes and
     policy. Expiry is reevaluated each cycle; a restart requires a fresh JWT.
+    input_bytes optionally supplies bounded raw manifest/token/transcript/trust
+    bytes from a coherent deployment bundle; it never supplies verified results.
     """
     now = now or dt.datetime.now(dt.timezone.utc)
     try:
+        def read_input(name, path, limit=1048576):
+            if input_bytes is None:
+                return _bounded_read(path, limit)
+            value = input_bytes[name]
+            if not isinstance(value, bytes) or len(value) > limit:
+                raise ValueError("invalid bounded raw input")
+            return value
+        if input_bytes is not None and discovery is not None:
+            raise ValueError("raw inputs and discovery are mutually exclusive")
         if discovery is not None:
             fetched = discovery.fetch(origin, expected_subject, now=now)
             manifest, raw = fetched["manifest"], fetched["body"]
         else:
-            raw = _bounded_read(manifest_path)
+            raw = read_input("manifest", manifest_path)
             manifest = load_manifest(raw)
         report = snapshot(manifest, schema, now)
         measurements = []
         rejection = None
         if evidence and report["assessment"]["status"] != "invalid":
-            token = _bounded_read(evidence["token"]).decode("ascii").strip()
-            transcript = _bounded_read(evidence["transcript"], 65536)
-            trust_raw = _bounded_read(evidence["trust"])
+            token = read_input("token", evidence.get("token")).decode("ascii").strip()
+            transcript = read_input("transcript", evidence.get("transcript"), 65536)
+            trust_raw = read_input("trust", evidence.get("trust"))
             trust = load_manifest(trust_raw)
             digest = "sha256:" + hashlib.sha256(raw).hexdigest()
             cache_key = fingerprint([token, hashlib.sha256(transcript).hexdigest(),
@@ -129,7 +140,7 @@ def run_once(manifest_path, schema, state_path=None, now=None, *, evidence=None,
                 report["assessment"]["findings"].append({"code": "measurement-expired", "ref": report["subject"]})
                 report["assessment"]["status"] = "needs-review"
         if state_path and report["assessment"]["status"] != "invalid":
-            report["changes"] = update_state(state_path, report)
+            report["changes"] = update_state(state_path, report, require_existing=require_existing_state)
     except (OSError, ValueError, TypeError, KeyError, RecursionError) as exc:
         finding = {"code": "monitor-input-or-state-failure", "message": str(exc)}
         report = {"subject": None, "checkedAt": now.isoformat(),
@@ -141,7 +152,7 @@ def run_once(manifest_path, schema, state_path=None, now=None, *, evidence=None,
         report["changes"] = {"alerts": [alert], "resolved": []}
         if state_path:
             try:
-                report["changes"]["alerts"] = enqueue_failure(state_path, alert)
+                report["changes"]["alerts"] = enqueue_failure(state_path, alert, require_existing=require_existing_state)
             except (OSError, ValueError, TypeError, KeyError, RecursionError) as exc:
                 # State failure cannot promise durability. Keep an explicit output
                 # signal for the supervisor rather than silently losing the failure.
