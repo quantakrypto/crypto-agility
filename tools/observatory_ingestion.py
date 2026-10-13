@@ -6,6 +6,7 @@ Existing unsigned Observatory database rows deliberately cannot use this profile
 import datetime as dt
 import hashlib
 import ipaddress
+import re
 from urllib.parse import urlsplit
 from tools.attestation import verify_envelope
 from tools.openssl_observation import parse_openssl_observation, MAX_TRANSCRIPT_BYTES, HYBRID_GROUPS, CLASSICAL_GROUPS
@@ -41,7 +42,10 @@ def ingest_measurement(token, transcript, trust_config, expected_subject, *, exp
         if (subject.scheme != 'https' or subject.username is not None or subject.password is not None or subject.query or subject.fragment or
             subject.path not in ('', '/') or subject.hostname != endpoint['host'].lower() or (subject.port or 443) != endpoint['port']):
             raise ValueError('endpoint-subject-mismatch')
-        observed = dt.datetime.fromisoformat(observation['observedAt'].replace('Z', '+00:00'))
+        timestamp = observation['observedAt']
+        if not isinstance(timestamp, str) or not re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-5][0-9]Z', timestamp):
+            raise ValueError('invalid-measurement-time')
+        observed = dt.datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
         if observed.tzinfo is None or not dt.timedelta(0) <= now-observed <= dt.timedelta(seconds=max_age_seconds):
             raise ValueError('stale-or-future-measurement')
         if observed.timestamp() > claims['iat']:

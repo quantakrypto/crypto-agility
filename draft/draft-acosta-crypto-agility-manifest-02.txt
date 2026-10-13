@@ -4,8 +4,8 @@
 
 Network Working Group                                          L. Acosta
 Internet-Draft                                              QuantaKrypto
-Intended status: Informational                           11 October 2026
-Expires: 14 April 2027
+Intended status: Informational                           13 October 2026
+Expires: 16 April 2027
 
 
                   A Well-Known Crypto-Agility Manifest
@@ -36,7 +36,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 April 2027.
+   This Internet-Draft will expire on 16 April 2027.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Acosta                    Expires 14 April 2027                 [Page 1]
+Acosta                    Expires 16 April 2027                 [Page 1]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Acosta                    Expires 14 April 2027                 [Page 2]
+Acosta                    Expires 16 April 2027                 [Page 2]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -122,13 +122,13 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
    hosts, repositories, fleets or deployment environments from a shared
    publisher.
 
-   Version 2 replaces, and is not an additive extension of, version 1.
-   Both use the same discovery location.  Producers serve one
-   representation; consumers MUST reject unsupported versions rather
-   than reinterpret their fields.  A version 1 readiness score or
-   hybridKex declaration MUST NOT be upgraded into a version 2 runtime
-   observation.  There is no downgrade or content-negotiation protocol
-   in this document.
+   The contract identifier is the JSON integer version value 2.
+   Producers serve one representation at the discovery location;
+   consumers MUST reject unsupported versions rather than reinterpret
+   their fields.  Any adapter for a separately supported source format
+   MUST retain its evidence provenance and MUST NOT promote a source
+   declaration or score into a runtime observation.  There is no
+   downgrade or content-negotiation protocol in this document.
 
    Producers SHOULD supply ETag or Last-Modified validators and Cache-
    Control.  Consumers SHOULD use conditional GET under [RFC9110] and
@@ -165,7 +165,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                 [Page 3]
+Acosta                    Expires 16 April 2027                 [Page 3]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -221,7 +221,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                 [Page 4]
+Acosta                    Expires 16 April 2027                 [Page 4]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -277,7 +277,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                 [Page 5]
+Acosta                    Expires 16 April 2027                 [Page 5]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -333,7 +333,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                 [Page 6]
+Acosta                    Expires 16 April 2027                 [Page 6]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -389,7 +389,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                 [Page 7]
+Acosta                    Expires 16 April 2027                 [Page 7]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -445,7 +445,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                 [Page 8]
+Acosta                    Expires 16 April 2027                 [Page 8]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -501,7 +501,7 @@ Appendix A.  JSON Schema
 
 
 
-Acosta                    Expires 14 April 2027                 [Page 9]
+Acosta                    Expires 16 April 2027                 [Page 9]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -557,7 +557,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                [Page 10]
+Acosta                    Expires 16 April 2027                [Page 10]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -613,7 +613,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                [Page 11]
+Acosta                    Expires 16 April 2027                [Page 11]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -669,7 +669,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                [Page 12]
+Acosta                    Expires 16 April 2027                [Page 12]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -725,7 +725,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                [Page 13]
+Acosta                    Expires 16 April 2027                [Page 13]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -781,7 +781,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                [Page 14]
+Acosta                    Expires 16 April 2027                [Page 14]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -837,7 +837,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                [Page 15]
+Acosta                    Expires 16 April 2027                [Page 15]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -893,7 +893,7 @@ Internet-Draft           Crypto-Agility Manifest            October 2026
 
 
 
-Acosta                    Expires 14 April 2027                [Page 16]
+Acosta                    Expires 16 April 2027                [Page 16]
 
 Internet-Draft           Crypto-Agility Manifest            October 2026
 
@@ -949,4 +949,4 @@ Author's Address
 
 
 
-Acosta                    Expires 14 April 2027                [Page 17]
+Acosta                    Expires 16 April 2027                [Page 17]

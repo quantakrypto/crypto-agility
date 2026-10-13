@@ -103,7 +103,7 @@ def probe_openssl(host, port=443, timeout=5, *, groups=DEFAULT_GROUPS,
                 parsed['negotiatedGroup'] in groups and parsed['peerSignatureType'] is not None)
     hybrid = verified and parsed['hybridKexObserved']
     classical = verified and parsed['negotiatedGroup'] in CLASSICAL_GROUPS
-    observed_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
+    observed_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
     return {**parsed, 'host': host, 'port': port, 'address': str(ip), 'observedAt': observed_at,
             'status': 'verified-connection' if verified else 'failed',
             'certificateValidated': verified, 'hybridKexVerified': hybrid,
