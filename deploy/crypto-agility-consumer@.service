@@ -1,0 +1,36 @@
+# Installation template only. Provision the named existing service account,
+# owner-private config/bundles and verified dependencies before enabling.
+[Unit]
+Description=Crypto-agility authenticated evidence consumer (%i)
+After=local-fs.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=%i
+Group=%i
+WorkingDirectory=/opt/crypto-agility
+ExecStart=/opt/crypto-agility/.venv/bin/python -m tools.consumer --config /etc/crypto-agility/%i/config.json --bundles /var/lib/crypto-agility-bundles/%i --state-directory /var/lib/crypto-agility-consumer/%i --interval 60
+StateDirectory=crypto-agility-consumer/%i
+StateDirectoryMode=0700
+UMask=0077
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX
+IPAddressDeny=any
+ReadOnlyPaths=/etc/crypto-agility/%i /var/lib/crypto-agility-bundles/%i
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
