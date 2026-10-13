@@ -4,7 +4,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
-XML = ROOT / 'draft/draft-acosta-crypto-agility-manifest-02.xml'
+XML = ROOT / 'draft/draft-acosta-crypto-agility-manifest-03.xml'
 MARKDOWN = XML.with_suffix('.md')
 
 

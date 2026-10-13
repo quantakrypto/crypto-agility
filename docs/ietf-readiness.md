@@ -1,6 +1,6 @@
 # Internet-Draft publication and readiness
 
-The complete proposal is `draft-acosta-crypto-agility-manifest-02`. Consult the [Datatracker publication record](https://datatracker.ietf.org/doc/draft-acosta-crypto-agility-manifest/) for the accepted revision and submission state. Local source files, an upload or passing checks do not establish publication. This is an individual Informational proposal, not an IETF standard or endorsement.
+The complete proposal is `draft-acosta-crypto-agility-manifest-03`. Consult the [Datatracker publication record](https://datatracker.ietf.org/doc/draft-acosta-crypto-agility-manifest/) for the accepted revision and submission state. Local source files, an upload or passing checks do not establish publication. This is an individual Informational proposal, not an IETF standard or endorsement.
 
 ## Submission materials
 
