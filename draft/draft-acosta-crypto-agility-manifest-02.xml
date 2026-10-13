@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<rfc ipr="trust200902" category="info" submissionType="IETF" docName="draft-acosta-crypto-agility-manifest-02" version="3" consensus="false" tocInclude="true" sortRefs="true" symRefs="true">
+<rfc ipr="trust200902" category="info" docName="draft-acosta-crypto-agility-manifest-02" version="3" consensus="false" tocInclude="true" sortRefs="true" symRefs="true">
   <front>
     <title abbrev="Crypto-Agility Manifest">A Well-Known Crypto-Agility Manifest</title>
     <seriesInfo name="Internet-Draft" value="draft-acosta-crypto-agility-manifest-02" />
