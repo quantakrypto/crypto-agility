@@ -1,25 +1,23 @@
 # IETF -02 readiness
 
-**Not submitted. The full requested acceptance criteria are not yet satisfied.** The implementation is merged at `7b79cd2`; the prepared text remains an individual proposal, not an IETF standard.
+**Revision -02 has not been submitted.** It remains an individual proposal, not an IETF standard or an endorsed implementation. Formal submission preparation and this project's production/interoperability acceptance goals are separate below.
 
 ## Prepared materials
 
-The authoritative RFCXML v3, generated Markdown, rendered text, embedded JSON Schema and examples describe one v2 contract. Version 1 remains available for existing qScan producers. The proposal requests a provisional well-known suffix; it introduces no media type, signature format, feed protocol or cryptographic algorithm. Contributor instructions require complete schema validation and regeneration checks rather than a partial hand-written schema check.
+The authoritative RFCXML v3, generated Markdown, rendered text, embedded JSON Schema and examples describe one v2 contract. Version 1 remains available for existing qScan producers. The proposal requests a provisional well-known suffix; it introduces no media type, signature format, feed protocol or cryptographic algorithm. Contributor instructions require complete schema validation and regeneration checks.
 
-## Verified submission process (2026-10-11)
+## Submission process checked on 2026-10-13
 
-- [Datatracker](https://datatracker.ietf.org/doc/draft-acosta-crypto-agility-manifest/) lists -01; -02 is the next revision. The author email is `leon@quantakrypto.com`.
-- [IETF author guidance](https://github.com/ietf/authors.ietf.org/blob/main/submitting-your-internet-draft.md) prefers standalone RFCXML v3, validates with xml2rfc/idnits, and requires author confirmation unless submitted by an authenticated listed author.
-- [IETF 127 dates](https://datatracker.ietf.org/meeting/127/important-dates/) list the draft cutoff as 2026-11-02 at 23:59 UTC. Recheck when submitting.
-- Author confirmation and a submission transaction have not been attempted.
+The [Datatracker record](https://datatracker.ietf.org/doc/draft-acosta-crypto-agility-manifest/) still lists -01 as an individual Internet-Draft; -02 is the intended next revision. Its published status explicitly does not imply IETF endorsement.
 
-## Remaining gates
+The [official author guidance](https://authors.ietf.org/submitting-your-internet-draft) prefers RFCXML v3 and describes submission through the [Datatracker submission tool](https://datatracker.ietf.org/submit/). Posting requires the requested author confirmation unless the submitter is authenticated and listed as an author. The [IETF 127 dates](https://datatracker.ietf.org/meeting/127/important-dates/) list the Internet-Draft cutoff as November 2, 2026 at 23:59 UTC. Recheck these sources immediately before submitting; no submission transaction or author confirmation has been attempted for -02.
 
-1. Hosted checks must pass on the exact candidate commit and generated submission artifacts. Implementation PR #2 is merged; its green checks do not waive the remaining acceptance gates.
-2. Complete the production issuer/exporter trust and deployment boundaries in [implementation-status.md](implementation-status.md). Reference fixture keys are not production trust anchors, and unsigned historical telemetry is not authenticated evidence.
-3. Demonstrate the required heterogeneous runtime interoperability. Current profile tests assess declarations; Node/Python tests establish JWS and schema interoperability, not independent complete security consumers.
-4. Review the final idnits diagnostics and obtain independent IETF-area feedback on the breaking v2 contract and registration. AI security review is not IETF endorsement. Recheck author metadata, references and the submission deadline.
+Before an upload, verify the revision, author metadata, references, standalone XML and generated renderings; review the exact candidate's idnits diagnostics and resolve blocking submission-tool errors. Hosted CI must pass on the final committed tree as this project's release policy. Passing offline idnits is preparation evidence, not a receipt from the submission service.
 
-The implementation changes have merged. Submission remains blocked while these acceptance gates are open; a green reference test suite alone does not establish technical readiness.
+## Project acceptance and quality goals
 
-The official Datatracker document and submission instructions were checked again during the 2026-10-11 follow-up: -01 remains published and -02 remains the intended next revision. Standalone RFCXML v3 and an idnits review remain the preparation path; author confirmation and a submission transaction were not attempted. Dated production receipts are recorded in [implementation-status.md](implementation-status.md): the scheduled collector ran successfully, and the legacy website writers now use one durable serialized ledger with verified real issuance. The 203 retained production collector records remain unsigned; standard-JWS handoff, authorization, exact manifest binding, shared-ledger integration, consumer monitoring and alert delivery remain unaccepted. Authoritative current key status is still missing because the documented revocation endpoint returned HTTP 404. No independent complete semantic consumer implementation or IETF-area endorsement is inferred from the Node/Python wire tests.
+The [dated implementation status](implementation-status.md) records the narrower evidence actually observed. October 11 established the stricter unsigned collector and durable legacy issuance. October 13 added fresh standard-JWS own-origin issuance, authenticated KMS status under the internal trust policy, exact manifest binding, persistent consumer restart/replay rejection and fresh-bundle recovery. A labeled test obtained provider-reported delivery. Independent verification also checked the public JWS, exact manifest/transcript bytes and ledger history. The consumer and alert timer are enabled; retained production alerts obtained durable provider-reported delivered receipts before exact acknowledgment. These receipts are bounded production evidence, not proof of every implementation or device.
+
+Independent complete semantic consumers, representative device execution and independent IETF-area feedback remain project quality goals. Node/OpenSSL/Python wire tests establish a narrower interoperability boundary. The individual Internet-Draft submission guidance does not require production deployment, heterogeneous device measurements or prior independent implementation; those must not be presented as formal IETF upload requirements. Equally, filing an Internet-Draft would not establish those engineering properties or grant standards status.
+
+The internal KMS status policy is not public root-signed nonrevocation. Compatibility stays unknown or declared where representative execution is absent. Prepare the submission materials while retaining these limitations; do not submit until the user's technical-readiness condition and current submission checks have been reviewed. No submission or IETF endorsement is claimed.
