@@ -1,0 +1,10 @@
+[Unit]
+Description=Retry pending crypto-agility alert delivery (%i)
+
+[Timer]
+OnBootSec=30
+OnUnitInactiveSec=60
+Unit=crypto-agility-alerts@%i.service
+
+[Install]
+WantedBy=timers.target

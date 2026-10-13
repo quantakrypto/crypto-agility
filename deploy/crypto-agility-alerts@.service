@@ -1,0 +1,25 @@
+# Configure EnvironmentFile in a host-specific drop-in to read the existing mail
+# runtime environment in place. Never place its values in this unit or a copy.
+[Unit]
+Description=Crypto-agility alert delivery (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=%i
+Group=%i
+WorkingDirectory=/opt/crypto-agility
+ExecStart=/opt/crypto-agility/.venv/bin/python -m tools.alert_delivery --config /etc/crypto-agility/%i/delivery.json --state-directory /var/lib/crypto-agility-consumer/%i
+TimeoutStartSec=120
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/crypto-agility-consumer/%i
+ReadOnlyPaths=/etc/crypto-agility/%i
+StandardOutput=journal
+StandardError=journal
