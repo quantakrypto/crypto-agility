@@ -152,7 +152,7 @@ def run_once(manifest_path, schema, state_path=None, now=None, *, evidence=None,
         report["changes"] = {"alerts": [alert], "resolved": []}
         if state_path:
             try:
-                report["changes"]["alerts"] = enqueue_failure(state_path, alert, require_existing=require_existing_state)
+                report["changes"]["alerts"] = enqueue_failure(state_path, alert, require_existing=require_existing_state, now=now)
             except (OSError, ValueError, TypeError, KeyError, RecursionError) as exc:
                 # State failure cannot promise durability. Keep an explicit output
                 # signal for the supervisor rather than silently losing the failure.

@@ -1,6 +1,7 @@
 """Durable Resend delivery of explicitly configured consumer alerts."""
 import argparse
 import datetime as dt
+import hashlib
 from email.utils import parseaddr
 import http.client
 import json
@@ -19,6 +20,12 @@ from tools.verifier import load_manifest
 DELIVERED = {'delivered', 'opened', 'clicked'}
 FAILED = {'bounced', 'canceled', 'complained', 'failed', 'suppressed'}
 IDEMPOTENCY_SECONDS = 23 * 3600  # Provider retains keys 24h; allow clock/network margin.
+# Critical alerts are sent one by one as soon as they are queued. The rest wait until
+# the oldest has been pending for DIGEST_SECONDS and then go out together in one digest.
+CRITICAL_TYPES = {'tls-regression'}
+DIGEST_SECONDS = 3600
+DIGEST_LIMIT = 20
+MESSAGE_LIMIT = 16384
 
 
 def _resend_worker(pipe, key, method, path, payload, idempotency_key):
@@ -101,6 +108,18 @@ def _configuration(path):
     return config
 
 
+def _critical(alert):
+    return alert.get('severity') == 'error' or alert.get('type') in CRITICAL_TYPES
+
+
+def _queued(alert):
+    # Alerts queued before digests existed carry no time and are treated as due.
+    try:
+        return dt.datetime.fromisoformat(alert['queuedAt']).timestamp()
+    except (KeyError, TypeError, ValueError):
+        return 0.0
+
+
 def _payload(alert, state, config):
     label = str(alert.get('type', 'monitor-failure'))
     if not re.fullmatch('[a-z0-9-]{1,80}', label):
@@ -108,10 +127,37 @@ def _payload(alert, state, config):
     text = ('Crypto-agility monitoring alert\n\nSubject: '+str(state.get('subject') or 'unavailable')+
             '\nOccurrence: '+alert['deliveryId']+'\nAction: '+str(alert.get('action', 'Review the monitor findings.'))+
             '\n\nDetails:\n'+json.dumps(alert, sort_keys=True, indent=2)+'\n')
-    if len(text.encode()) > 16384:
+    if len(text.encode()) > MESSAGE_LIMIT:
         raise ValueError('alert message size limit')
     return {'from': config['sender'], 'to': [config['recipient']], 'subject': '[QuantaKrypto] Crypto-agility '+label,
             'text': text, 'tags': [{'name': 'monitor', 'value': 'crypto-agility'}, {'name': 'delivery', 'value': alert['deliveryId']}]}
+
+
+def _digest_section(alert):
+    label = str(alert.get('type', 'monitor-failure'))
+    if not re.fullmatch('[a-z0-9-]{1,80}', label):
+        raise ValueError('invalid alert type')
+    return ('\n['+label+'] Occurrence: '+alert['deliveryId']+'\nAction: '+str(alert.get('action', 'Review the monitor findings.'))+
+            '\nDetails:\n'+json.dumps(alert, sort_keys=True, indent=2)+'\n')
+
+
+def _digest(alerts, state, config):
+    """Group the oldest non-critical alerts that fit one message; returns (id, members, payload)."""
+    head = 'Crypto-agility monitoring digest\n\nSubject: '+str(state.get('subject') or 'unavailable')+'\n'
+    members, body = [], ''
+    for alert in sorted(alerts, key=lambda a: (_queued(a), a['deliveryId'])):
+        section = _digest_section(alert)
+        if len(members) >= DIGEST_LIMIT or len((head+body+section).encode()) > MESSAGE_LIMIT:
+            break
+        members.append(alert['deliveryId'])
+        body += section
+    if not members:
+        raise ValueError('alert message size limit')
+    identity = hashlib.sha256(('digest:'+','.join(sorted(members))).encode()).hexdigest()[:32]
+    payload = {'from': config['sender'], 'to': [config['recipient']],
+               'subject': '[QuantaKrypto] Crypto-agility digest ('+str(len(members))+' alerts)',
+               'text': head+body, 'tags': [{'name': 'monitor', 'value': 'crypto-agility'}, {'name': 'delivery', 'value': identity}]}
+    return identity, members, payload
 
 
 def deliver_pending(directory, config_path, client, *, now=None):
@@ -137,21 +183,38 @@ def deliver_pending(directory, config_path, client, *, now=None):
                     or any(type(record[name]) not in (int, float) or not math.isfinite(record[name]) or record[name] > now.timestamp()
                            for name in ('firstAttempt', 'lastChecked', 'deliveredAt') if name in record)):
                 raise ValueError('invalid delivery receipt timestamp')
-        pending = sorted(pending, key=lambda alert: journal['records'].get(alert.get('deliveryId'), {}).get('lastChecked', -1))[:3]
         for alert in pending:
-            identity = alert.get('deliveryId', '')
-            if not isinstance(identity, str) or not re.fullmatch('[a-f0-9]{32}', identity):
+            if not isinstance(alert.get('deliveryId'), str) or not re.fullmatch('[a-f0-9]{32}', alert['deliveryId']):
                 raise ValueError('invalid alert occurrence')
+        pending_ids = {alert['deliveryId'] for alert in pending}
+        urgent = sorted((a for a in pending if _critical(a)),
+                        key=lambda alert: journal['records'].get(alert['deliveryId'], {}).get('lastChecked', -1))[:3]
+        work = [(alert['deliveryId'], [alert['deliveryId']], lambda alert=alert: _payload(alert, state, config)) for alert in urgent]
+        routine = [a for a in pending if not _critical(a)]
+        # An unfinished digest keeps its exact members until its receipt resolves.
+        open_digest = next((name for name, record in journal['records'].items()
+                            if isinstance(record, dict) and record.get('members') and not record.get('deliveredAt')
+                            and record.get('lastEvent') not in FAILED and set(record['members']) <= pending_ids), None)
+        if open_digest:
+            work.append((open_digest, journal['records'][open_digest]['members'], None))
+        elif routine and now.timestamp() - min(_queued(a) for a in routine) >= DIGEST_SECONDS:
+            identity, members, payload = _digest(routine, state, config)
+            work.append((identity, members, lambda payload=payload: payload))
+        for identity, members, build in work:
             record = journal['records'].get(identity)
             if record is None:
                 if len(journal['records']) >= 10000:
                     raise ValueError('delivery receipt capacity requires archival')
-                record = {'firstAttempt': now.timestamp(), 'payload': _payload(alert, state, config)}
+                record = {'firstAttempt': now.timestamp(), 'payload': build()}
+                if len(members) > 1 or members[0] != identity:
+                    record['members'] = members
                 journal['records'][identity] = record
                 save(journal)  # Durable intent before any external request.
             record['lastChecked'] = now.timestamp()
             save(journal)
             result = {'deliveryId': identity, 'status': 'pending'}
+            if record.get('members'):
+                result['members'] = record['members']
             try:
                 payload = record['payload']
                 if payload['to'] != [config['recipient']] or payload['from'] != config['sender']:
@@ -180,7 +243,7 @@ def deliver_pending(directory, config_path, client, *, now=None):
                         record['deliveredAt'] = now.timestamp()
                     save(journal)
                 if record.get('deliveredAt'):
-                    acknowledge_alerts(directory/'state.json', [identity])
+                    acknowledge_alerts(directory/'state.json', record.get('members', [identity]))
                     result['status'] = 'delivered'
                 elif record.get('lastEvent') in FAILED:
                     result['status'] = 'delivery-failed'

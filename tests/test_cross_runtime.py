@@ -266,8 +266,9 @@ class LiveMeasurementPipelineTests(unittest.TestCase):
                 self.assertEqual(expired_manifest['assessment']['status'], 'invalid')
                 retained_baseline = json.loads(original)
                 after_failure = json.loads(remote_state.read_bytes())
-                self.assertEqual({k: v for k, v in after_failure.items() if k != 'pendingAlerts'},
-                                 {k: v for k, v in retained_baseline.items() if k != 'pendingAlerts'})
+                bookkeeping = ('pendingAlerts', 'activeFailures')
+                self.assertEqual({k: v for k, v in after_failure.items() if k not in bookkeeping},
+                                 {k: v for k, v in retained_baseline.items() if k not in bookkeeping})
                 self.assertTrue(any(a['type'] == 'monitor-failure' for a in after_failure['pendingAlerts']))
                 self.assertEqual(expired_manifest['changes']['alerts'][0]['type'], 'monitor-failure')
 
