@@ -214,7 +214,7 @@ class Consumer:
             try:
                 if not state_safe:
                     raise ValueError('consumer state directory is unsafe or unavailable')
-                changes['alerts'] = enqueue_failure(self.directory/'state.json', alert, require_existing=True)
+                changes['alerts'] = enqueue_failure(self.directory/'state.json', alert, require_existing=True, now=now)
             except (OSError, ValueError, TypeError, KeyError, RecursionError) as error:
                 changes['deliveryPersistenceFailure'] = str(error)
             return {'subject': None, 'checkedAt': now.isoformat(), 'assessment': {'status': 'invalid', 'findings': [finding]}, 'pairs': [], 'changes': changes}

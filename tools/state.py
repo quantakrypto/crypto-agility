@@ -173,7 +173,7 @@ def update_state(path, report, *, require_existing=False):
         pending = {a["id"]: a for a in (previous or {}).get("pendingAlerts", [])}
         for alert in delta["alerts"]:
             if alert["id"] not in pending:
-                pending[alert["id"]] = {**alert, "deliveryId": uuid.uuid4().hex}
+                pending[alert["id"]] = {**alert, "deliveryId": uuid.uuid4().hex, "queuedAt": report["checkedAt"]}
         # Save alerts with the baseline before output or external delivery. Retry the
         # same deliveryId until the supervisor explicitly acknowledges delivery.
         historical = (previous or {}).get("lastAuthenticatedMeasurements", (previous or {}).get("measurements", []))
@@ -205,14 +205,29 @@ def acknowledge_alerts(path, delivery_ids):
         return len(pending) - len(remaining)
 
 
-def enqueue_failure(path, alert, *, require_existing=False):
-    """Durably queue an input failure without advancing a successful baseline."""
+FAILURE_REMINDER_SECONDS = 24 * 3600
+
+
+def enqueue_failure(path, alert, *, require_existing=False, now=None):
+    """Durably queue an input failure without advancing a successful baseline.
+
+    A failure that persists across checks queues one occurrence, then one reminder per
+    day while it lasts, instead of a new occurrence each check once the last one was
+    delivered. A successful check replaces the state and so forgets active failures."""
+    now = now or dt.datetime.now(dt.timezone.utc)
     with locked_document(path, require_existing=require_existing) as (previous, save):
         state = previous if previous is not None else {"noBaseline": True}
         pending = {a["id"]: a for a in state.get("pendingAlerts", [])}
-        if alert["id"] not in pending:
-            pending[alert["id"]] = {**alert, "deliveryId": uuid.uuid4().hex}
+        active = state.get("activeFailures", {})
+        active = {k: v for k, v in active.items() if type(v) in (int, float)} if isinstance(active, dict) else {}
+        last = active.get(alert["id"])
+        recent = last is not None and 0 <= now.timestamp() - last < FAILURE_REMINDER_SECONDS
+        if alert["id"] not in pending and not recent:
+            pending[alert["id"]] = {**alert, "deliveryId": uuid.uuid4().hex, "queuedAt": now.isoformat()}
+            active[alert["id"]] = now.timestamp()
         state["pendingAlerts"] = list(pending.values())
+        state["activeFailures"] = active
         save(state)
         # Lead with the current failure, followed by any other undelivered alerts.
-        return [pending[alert["id"]]] + [a for k, a in pending.items() if k != alert["id"]]
+        current = [pending[alert["id"]]] if alert["id"] in pending else []
+        return current + [a for k, a in pending.items() if k != alert["id"]]
