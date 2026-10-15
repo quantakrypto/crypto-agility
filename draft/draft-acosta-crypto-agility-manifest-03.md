@@ -1,6 +1,6 @@
 # A Well-Known Crypto-Agility Manifest
 
-`draft-acosta-crypto-agility-manifest-02` | individual Informational proposal | [publication status](https://datatracker.ietf.org/doc/draft-acosta-crypto-agility-manifest/)
+`draft-acosta-crypto-agility-manifest-03` | individual Informational proposal | [publication status](https://datatracker.ietf.org/doc/draft-acosta-crypto-agility-manifest/)
 
 Author: Leon Acosta, QuantaKrypto, leon@quantakrypto.com
 

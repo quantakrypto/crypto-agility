@@ -9,8 +9,8 @@ from tools.render_draft import render
 ROOT=Path(__file__).resolve().parents[1]
 SCHEMA=ROOT/"schema/crypto-agility-v2.schema.json"
 EXAMPLE=ROOT/"examples/crypto-agility-v2.json"
-XML=ROOT/"draft/draft-acosta-crypto-agility-manifest-02.xml"
-MD=ROOT/"draft/draft-acosta-crypto-agility-manifest-02.md"
+XML=ROOT/"draft/draft-acosta-crypto-agility-manifest-03.xml"
+MD=ROOT/"draft/draft-acosta-crypto-agility-manifest-03.md"
 
 class ContractTests(unittest.TestCase):
     @classmethod
@@ -34,10 +34,10 @@ class ContractTests(unittest.TestCase):
         self.assertTrue(list(self.validator.iter_errors(d)))
     def test_xml_well_formed_and_named(self):
         root=ET.parse(XML).getroot()
-        self.assertEqual(root.attrib["docName"],"draft-acosta-crypto-agility-manifest-02")
+        self.assertEqual(root.attrib["docName"],"draft-acosta-crypto-agility-manifest-03")
         self.assertEqual(root.attrib["version"],"3")
     def test_draft_markdown_mentions_same_revision(self):
-        self.assertIn("draft-acosta-crypto-agility-manifest-02",MD.read_text())
+        self.assertIn("draft-acosta-crypto-agility-manifest-03",MD.read_text())
     def test_normative_schema_matches_standalone(self):
         root=ET.parse(XML).getroot()
         self.assertEqual(json.loads(root.find("back/section[@anchor='schema']/sourcecode").text),self.schema)

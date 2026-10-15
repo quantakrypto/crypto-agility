@@ -4,7 +4,7 @@ A discoverable JSON contract for declared cryptographic capabilities, migration 
 
 ## Current contract
 
-The [authoritative RFCXML](draft/draft-acosta-crypto-agility-manifest-02.xml), [readable specification](draft/draft-acosta-crypto-agility-manifest-02.md), [JSON Schema](schema/crypto-agility-v2.schema.json), [minimal example](examples/minimal-v2.json) and [complete example](examples/crypto-agility-v2.json) define the contract with `version: 2`. The Internet-Draft revision suffix and the JSON contract version are separate identifiers. Consumers reject unsupported versions; the [qScan adapter](docs/qscan-integration.md) explicitly handles supported input with `version: 1` without treating source declarations as runtime evidence.
+The [authoritative RFCXML](draft/draft-acosta-crypto-agility-manifest-03.xml), [readable specification](draft/draft-acosta-crypto-agility-manifest-03.md), [JSON Schema](schema/crypto-agility-v2.schema.json), [minimal example](examples/minimal-v2.json) and [complete example](examples/crypto-agility-v2.json) define the contract with `version: 2`. The Internet-Draft revision suffix and the JSON contract version are separate identifiers. Consumers reject unsupported versions; the [qScan adapter](docs/qscan-integration.md) explicitly handles supported input with `version: 1` without treating source declarations as runtime evidence.
 
 A manifest identifies one independently authorized subject. It contains generation and expiry timestamps, declared endpoint profiles, observations and migration records, with optional evidence, policies and exceptions. Evidence is bound to its exact bytes and subject. Declarations, authenticated collector statements and independent measurements are distinct assurance levels. Key establishment and authentication are assessed separately. The contract grants no authority to change a system.
 
@@ -32,7 +32,7 @@ Install `requirements.txt` and `npm ci --ignore-scripts`, then follow [implement
 ```sh
 python -m tools.verifier examples/crypto-agility-v2.json --now 2026-10-12T00:00:00Z
 python -m tools.render_draft --check
-xml2rfc --no-network --text draft/draft-acosta-crypto-agility-manifest-02.xml
+xml2rfc --no-network --text draft/draft-acosta-crypto-agility-manifest-03.xml
 ```
 
 The example intentionally reports fallback risks and exits 1. Read [runtime evidence](docs/runtime-evidence.md), [signed observations](docs/signed-observations.md), [collector integration](docs/observatory-integration.md), [consumer deployment](docs/consumer-deployment.md) and the [security review](docs/security-review.md) before relying on evidence. Production acceptance and its limits are in [implementation status](docs/implementation-status.md); submission status and requirements are in [IETF readiness](docs/ietf-readiness.md).

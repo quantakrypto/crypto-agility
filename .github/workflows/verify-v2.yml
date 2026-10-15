@@ -59,10 +59,10 @@ jobs:
       - name: Render IETF XML without network references
         run: |
           python -m tools.render_draft --check
-          xml2rfc --no-network --text draft/draft-acosta-crypto-agility-manifest-02.xml --out build/results/draft-acosta-crypto-agility-manifest-02.txt
-          cmp build/results/draft-acosta-crypto-agility-manifest-02.txt draft/draft-acosta-crypto-agility-manifest-02.txt
-          xml2rfc --no-network --html draft/draft-acosta-crypto-agility-manifest-02.xml --out build/results/draft-acosta-crypto-agility-manifest-02.html
-          node_modules/.bin/idnits --mode submission --offline --output json draft/draft-acosta-crypto-agility-manifest-02.xml > build/results/idnits.json
+          xml2rfc --no-network --text draft/draft-acosta-crypto-agility-manifest-03.xml --out build/results/draft-acosta-crypto-agility-manifest-03.txt
+          cmp build/results/draft-acosta-crypto-agility-manifest-03.txt draft/draft-acosta-crypto-agility-manifest-03.txt
+          xml2rfc --no-network --html draft/draft-acosta-crypto-agility-manifest-03.xml --out build/results/draft-acosta-crypto-agility-manifest-03.html
+          node_modules/.bin/idnits --mode submission --offline --output json draft/draft-acosta-crypto-agility-manifest-03.xml > build/results/idnits.json
           python -c 'import json; d=json.load(open("build/results/idnits.json")); assert d["result"]=="pass" and not any(d["nitsBySeverity"].values())'
       - name: Retain exact-commit validation evidence
         if: always()
