@@ -62,6 +62,7 @@ def ingest_measurement(token, transcript, trust_config, expected_subject, *, exp
         parsed = parse_openssl_observation(transcript.decode('utf-8'))
         if parsed['status'] != 'observed' or parsed['negotiatedGroup'] not in groups or not parsed['peerSignatureType']:
             raise ValueError('unverified-connection')
+        replay_store.commit_observation(claims, now.timestamp())
         return {'accepted': True, 'reason': 'authenticated-observation',
                 'subject': expected_subject, 'issuer': claims['iss'], 'measurementId': claims['jti'],
                 'observedAt': observation['observedAt'], 'expiresAt': claims['exp'],

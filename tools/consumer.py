@@ -166,7 +166,6 @@ class Consumer:
     def __init__(self, config, bundles, state_directory):
         self.config_path, self.bundles, self.directory = map(Path, (config, bundles, state_directory))
         self.schema = json.loads((ROOT/'schema/crypto-agility-v2.schema.json').read_bytes())
-        self.cache = {}
 
     def _record_kms_check(self, checked_at, *, unavailable=False):
         with locked_document(self.directory/'clock.json', require_existing=True) as (clock, save):
@@ -202,9 +201,14 @@ class Consumer:
             manifest = load_manifest(values['manifest.json'])
             if manifest.get('subject', {}).get('kind') != 'origin' or manifest['subject'].get('id') != config['subject']:
                 raise ValueError('bundle must explicitly declare the configured origin subject')
+            # Bind raw evidence and independently provisioned identity/trust, not
+            # the changing status receipt. Status and withdrawal were checked above.
+            binding = fingerprint({'files': {name: hashlib.sha256(raw).hexdigest() for name, raw in values.items()},
+                                   'trust': config['trust'],
+                                   'scope': [config[k] for k in ('issuer', 'subject', 'audience', 'keyId')]})
             return run_once(None, self.schema, self.directory/'state.json', now,
-                            evidence={'audience': config['audience'], 'replay_store': ReplayStore(self.directory/'replay.json', require_existing=True)},
-                            measurement_cache=self.cache, require_existing_state=True,
+                            evidence={'audience': config['audience'], 'replay_store': ReplayStore(self.directory/'replay.json', require_existing=True, continuity_binding=binding)},
+                            require_existing_state=True,
                             input_bytes={'manifest': values['manifest.json'], 'token': values['observation.jwt'],
                                          'transcript': values['transcript.txt'], 'trust': canonical(config['trust'])})
         except (OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError) as exc:
