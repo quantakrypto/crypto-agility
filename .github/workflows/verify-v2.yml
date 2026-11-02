@@ -63,7 +63,7 @@ jobs:
           cmp build/results/draft-acosta-crypto-agility-manifest-03.txt draft/draft-acosta-crypto-agility-manifest-03.txt
           xml2rfc --no-network --html draft/draft-acosta-crypto-agility-manifest-03.xml --out build/results/draft-acosta-crypto-agility-manifest-03.html
           node_modules/.bin/idnits --mode submission --offline --output json draft/draft-acosta-crypto-agility-manifest-03.xml > build/results/idnits.json
-          python -c 'import json; d=json.load(open("build/results/idnits.json")); assert d["result"]=="pass" and not any(d["nitsBySeverity"].values())'
+          python -m tools.idnits_gate --repository build/results/idnits.json
       - name: Retain exact-commit validation evidence
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

@@ -74,10 +74,51 @@ class ReplayStore:
     Fresh IDs do not permit an older issuance time to replace a newer statement
     for the same issuer/subject/audience/purpose. A clock rollback fails closed.
     """
-    def __init__(self, path, max_entries=10000, *, require_existing=False):
+    def __init__(self, path, max_entries=10000, *, require_existing=False, continuity_binding=None):
         self.path = Path(path)
         self.max_entries = max_entries
         self.require_existing = require_existing
+        if continuity_binding is not None and not re.fullmatch('[a-f0-9]{64}', continuity_binding):
+            raise ValueError('invalid observation continuity binding')
+        self.continuity_binding = continuity_binding
+
+    def _receipt(self, claims):
+        return {'binding': self.continuity_binding,
+                'identity': hashlib.sha256(canonical([claims[k] for k in ('iss', 'aud', 'jti')])).hexdigest(),
+                'scope': hashlib.sha256(canonical([claims[k] for k in ('iss', 'sub', 'aud', 'purpose')])).hexdigest(),
+                'issuedAt': claims['iat'], 'expiresAt': claims['exp']}
+
+    @staticmethod
+    def _validate_receipt(state):
+        if 'continuity' not in state:
+            return
+        value = state['continuity']
+        if (not isinstance(value, dict) or set(value) != {'binding', 'identity', 'scope', 'issuedAt', 'expiresAt', 'accepted'}
+                or any(not isinstance(value[k], str) or not re.fullmatch('[a-f0-9]{64}', value[k]) for k in ('binding', 'identity', 'scope'))
+                or any(type(value[k]) is not int or value[k] < 0 for k in ('issuedAt', 'expiresAt'))
+                or value['expiresAt'] <= value['issuedAt'] or type(value['accepted']) is not bool):
+            raise ValueError('invalid observation continuity receipt')
+
+    def commit_observation(self, claims, now):
+        """Mark full semantic acceptance, never signature-only consumption.
+
+        The pending identity was written atomically with jti consumption. Another
+        consumption replaces it, so a late validation cannot restore an old token.
+        A crash before this write leaves the consumed token non-resumable.
+        """
+        if self.continuity_binding is None:
+            return
+        receipt = self._receipt(claims)
+        with locked_document(self.path, require_existing=True) as (state, save):
+            self._validate_receipt(state)
+            current = state.get('continuity', {})
+            if (any(current.get(k) != v for k, v in receipt.items()) or now < state['lastNow']
+                    or state['entries'].get(receipt['identity']) != receipt['expiresAt']
+                    or state['latest'].get(receipt['scope']) != receipt['issuedAt'] or now >= receipt['expiresAt']):
+                raise ValueError('observation continuity transaction changed')
+            state['continuity'] = {**receipt, 'accepted': True}
+            state['lastNow'] = now
+            save(state)
 
     def consume(self, claims, now):
         identity = hashlib.sha256(canonical([claims[k] for k in ("iss", "aud", "jti")])).hexdigest()
@@ -87,15 +128,26 @@ class ReplayStore:
             if (state.get("version") != 1 or not isinstance(state.get("entries"), dict)
                     or not isinstance(state.get("latest"), dict)):
                 raise ValueError("invalid replay state")
+            self._validate_receipt(state)
             if now < state["lastNow"]:
                 raise ValueError("replay store clock rollback")
             state["entries"] = {key: expiry for key, expiry in state["entries"].items() if expiry > now}
             if identity in state["entries"]:
+                receipt = {**self._receipt(claims), 'accepted': True}
+                if (self.continuity_binding is not None and state.get('continuity') == receipt
+                        and state['entries'][identity] == claims['exp']
+                        and state['latest'].get(scope) == claims['iat']):
+                    state['lastNow'] = now
+                    save(state)
+                    return True, 'continued-observation'
                 return False, "replay"
             if claims["iat"] < state["latest"].get(scope, -1):
                 return False, "observation-rollback"
             if len(state["entries"]) >= self.max_entries or (scope not in state["latest"] and len(state["latest"]) >= self.max_entries):
                 raise ValueError("replay store capacity exceeded")
+            state.pop('continuity', None)
+            if self.continuity_binding is not None:
+                state['continuity'] = {**self._receipt(claims), 'accepted': False}
             state["lastNow"] = now
             state["entries"][identity] = claims["exp"]
             state["latest"][scope] = claims["iat"]

@@ -48,7 +48,7 @@ class ConsumerTests(unittest.TestCase):
     def save_config(self):
         put(self.config_path, json.dumps(self.config).encode())
 
-    def select(self, jti, group='X25519MLKEM768', subject=SUBJECT):
+    def select(self, jti, group='X25519MLKEM768', subject=SUBJECT, observation_changes=None):
         manifest = json.loads((ROOT/'examples/crypto-agility-v2.json').read_bytes())
         manifest['subject'] = {'kind': 'origin', 'id': subject}
         raw = json.dumps(manifest).encode()
@@ -57,6 +57,7 @@ class ConsumerTests(unittest.TestCase):
                   'snapshotDigest': 'sha256:'+hashlib.sha256(raw).hexdigest(),
                   'observation': {'profile': 'openssl-tls13-v1', 'observedAt': NOW.isoformat().replace("+00:00", "Z"), 'endpoint': {'host': urlsplit(subject).hostname, 'port': urlsplit(subject).port or 443, 'address': '192.0.2.1'},
                                   'probe': {'name': 'openssl', 'version': 'OpenSSL 3.5.0', 'groups': [group], 'certificateValidation': 'pkix-hostname', 'exitCode': 0}, 'transcriptSha256': hashlib.sha256(transcript).hexdigest()}}
+        claims['observation'].update(observation_changes or {})
         token = issue({'operation': 'sign', 'privateJwk': self.keys['privateJwk'], 'header': {'alg': 'EdDSA', 'kid': 'probe', 'typ': 'pqc-observation+jwt'}, 'claims': claims})['token']
         values = {'manifest.json': raw, 'observation.jwt': token.encode(), 'transcript.txt': transcript}
         commitment = json.dumps({k: hashlib.sha256(v).hexdigest() for k, v in values.items()}, sort_keys=True, separators=(',', ':')).encode()
@@ -73,15 +74,124 @@ class ConsumerTests(unittest.TestCase):
         from tools.consumer import Consumer
         return Consumer(self.config_path, self.bundles, self.state)
 
-    def test_signed_bundle_cache_restart_replay_and_expiry(self):
+    def test_signed_bundle_restart_continuity_and_expiry(self):
         consumer = self.consumer()
         report = consumer.check(NOW)
         self.assertEqual(report['measurements'][0]['status'], 'authenticated-observation', report)
         self.assertEqual(consumer.check(NOW)['measurements'][0]['status'], 'authenticated-observation')
-        replay = self.consumer().check(NOW)
-        self.assertIn({'code': 'measurement-rejected', 'ref': 'replay'}, replay['assessment']['findings'])
+        resumed = self.consumer().check(NOW)
+        self.assertEqual(resumed['measurements'][0]['status'], 'authenticated-observation', resumed)
         expired = consumer.check(NOW+dt.timedelta(seconds=3601))
-        self.assertIn('measurement-expired', [f['code'] for f in expired['assessment']['findings']])
+        self.assertEqual(expired['measurements'], [])
+        self.assertIn({'code': 'measurement-rejected', 'ref': 'stale-or-future'}, expired['assessment']['findings'])
+
+    def test_restart_rechecks_signature_and_current_policy(self):
+        consumer = self.consumer()
+        consumer.check(NOW)
+        with patch('tools.attestation.jwt.decode', side_effect=ValueError('signature verification failed')):
+            report = self.consumer().check(NOW)
+        self.assertEqual(report['measurements'], [])
+        self.config['trust']['issuers']['observatory']['maxAgeSeconds'] = 1800
+        self.save_config()
+        report = consumer.check(NOW)
+        self.assertIn({'code': 'measurement-rejected', 'ref': 'replay'}, report['assessment']['findings'])
+
+    def test_reselecting_prior_bundle_after_new_acceptance_is_replay(self):
+        consumer = self.consumer()
+        consumer.check(NOW)
+        old = self.selected.name
+        self.select('newer', 'X25519')
+        consumer.check(NOW)
+        put(self.bundles/'current', (old+'\n').encode())
+        for restarted in (consumer, self.consumer()):
+            report = restarted.check(NOW)
+            self.assertEqual(report['measurements'], [])
+            self.assertIn({'code': 'measurement-rejected', 'ref': 'replay'}, report['assessment']['findings'])
+
+    def test_consumption_without_success_receipt_cannot_resume(self):
+        from tools.attestation import ReplayStore
+        with patch.object(ReplayStore, 'commit_observation', side_effect=OSError('simulated receipt fsync failure')):
+            first = self.consumer().check(NOW)
+        self.assertFalse(first.get('measurements'))
+        report = self.consumer().check(NOW)
+        self.assertIn({'code': 'measurement-rejected', 'ref': 'replay'}, report['assessment']['findings'])
+
+    def test_status_refresh_allows_exact_receipt_but_revocation_does_not(self):
+        self.consumer().check(NOW)
+        self.config['keyStatus']['source'] = 'fresh operator status receipt'
+        self.save_config()
+        report = self.consumer().check(NOW)
+        self.assertEqual(report['measurements'][0]['status'], 'authenticated-observation')
+        self.config['trust']['issuers']['observatory']['revokedKeys'] = ['probe']
+        self.save_config()
+        self.assertEqual(self.consumer().check(NOW)['assessment']['status'], 'invalid')
+
+    def test_new_semantically_invalid_token_invalidates_prior_receipt(self):
+        consumer = self.consumer()
+        consumer.check(NOW)
+        old = self.selected.name
+        self.select('invalid-new', observation_changes={'transcriptSha256': '0'*64})
+        rejected = consumer.check(NOW)
+        self.assertIn({'code': 'measurement-rejected', 'ref': 'invalid-measurement'}, rejected['assessment']['findings'])
+        put(self.bundles/'current', (old+'\n').encode())
+        self.assertEqual(self.consumer().check(NOW)['measurements'], [])
+        state = json.loads((self.state/'replay.json').read_bytes())
+        self.assertFalse(state['continuity']['accepted'])
+        self.assertEqual(len(state['entries']), 2)
+
+    def test_generic_replay_consumer_cannot_resume_supervisor_receipt(self):
+        from tools.attestation import ReplayStore
+        from tools.observatory_ingestion import ingest_measurement
+        self.consumer().check(NOW)
+        result = ingest_measurement((self.selected/'observation.jwt').read_text(),
+                                    (self.selected/'transcript.txt').read_bytes(), self.config['trust'], SUBJECT,
+                                    expected_audience='monitor', replay_store=ReplayStore(self.state/'replay.json'), now=NOW)
+        self.assertEqual(result['reason'], 'replay')
+
+    def test_missing_or_corrupt_continuity_does_not_accept_replay(self):
+        self.consumer().check(NOW)
+        path = self.state/'replay.json'
+        original = json.loads(path.read_bytes())
+        for receipt in (None, {}, {'accepted': True}):
+            with self.subTest(receipt=receipt):
+                state = copy.deepcopy(original)
+                if receipt is None: state.pop('continuity')
+                else: state['continuity'] = receipt
+                put(path, json.dumps(state).encode())
+                self.assertEqual(self.consumer().check(NOW)['measurements'], [])
+
+    def test_crash_after_receipt_before_baseline_preserves_failure_outbox(self):
+        with patch('tools.monitor.update_state', side_effect=OSError('simulated baseline failure')):
+            failed = self.consumer().check(NOW)
+        occurrence = failed['changes']['alerts'][0]['deliveryId']
+        resumed = self.consumer().check(NOW)
+        self.assertEqual(resumed['measurements'][0]['status'], 'authenticated-observation')
+        self.assertIn(occurrence, [a['deliveryId'] for a in resumed['changes']['alerts']])
+
+    def test_raw_byte_change_cannot_reuse_success_receipt(self):
+        self.consumer().check(NOW)
+        values = {n: (self.selected/n).read_bytes() for n in ('manifest.json', 'observation.jwt', 'transcript.txt')}
+        values['manifest.json'] += b'\n'
+        identity = hashlib.sha256(json.dumps({k: hashlib.sha256(v).hexdigest() for k, v in values.items()}, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        directory = self.bundles/identity
+        directory.mkdir(mode=0o700)
+        for name, value in values.items(): put(directory/name, value)
+        put(self.bundles/'current', (identity+'\n').encode())
+        report = self.consumer().check(NOW)
+        self.assertIn({'code': 'measurement-rejected', 'ref': 'binding-mismatch'}, report['assessment']['findings'])
+
+    def test_late_receipt_cannot_replace_same_time_new_consumption(self):
+        from tools.attestation import ReplayStore
+        claims = {'iss': 'issuer', 'sub': SUBJECT, 'aud': 'monitor', 'purpose': 'pqc-observation',
+                  'jti': 'old', 'iat': int(NOW.timestamp()), 'exp': int(NOW.timestamp())+60}
+        old = ReplayStore(self.state/'replay.json', require_existing=True, continuity_binding='a'*64)
+        new = ReplayStore(self.state/'replay.json', require_existing=True, continuity_binding='b'*64)
+        self.assertTrue(old.consume(claims, NOW.timestamp())[0])
+        self.assertTrue(new.consume({**claims, 'jti': 'new'}, NOW.timestamp())[0])
+        with self.assertRaises(ValueError): old.commit_observation(claims, NOW.timestamp())
+        self.assertEqual(old.consume(claims, NOW.timestamp()), (False, 'replay'))
+        new.commit_observation({**claims, 'jti': 'new'}, NOW.timestamp())
+        self.assertEqual(new.consume({**claims, 'jti': 'new'}, NOW.timestamp()), (True, 'continued-observation'))
 
     def test_switch_regression_and_failure_outbox_survive_repair(self):
         consumer = self.consumer()
